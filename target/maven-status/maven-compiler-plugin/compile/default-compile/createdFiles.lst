@@ -10,6 +10,7 @@ com/marketingagent/domain/broadcast/BroadcastBatchStatus.class
 com/marketingagent/dto/broadcast/BroadcastCreateRequest.class
 com/marketingagent/domain/user/MembershipRole.class
 com/marketingagent/domain/message/InboundMessage.class
+com/marketingagent/MarketingAgentApplication.class
 com/marketingagent/webclient/WhatsAppClientProperties.class
 com/marketingagent/service/TenantService.class
 com/marketingagent/dto/tenant/TenantCreateRequest.class
@@ -63,7 +64,9 @@ com/marketingagent/repository/ContactAttributeRepository.class
 com/marketingagent/domain/message/OutboundMessageStatus.class
 com/marketingagent/domain/common/Channel.class
 com/marketingagent/repository/OutboundMessageRepository.class
+com/marketingagent/webclient/whatsapp/WhatsAppTemplateMessageRequest.class
 com/marketingagent/repository/InboundMessageRepository.class
+com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.class
 com/marketingagent/domain/agent/AgentTaskType.class
 com/marketingagent/domain/message/InboundMessageClassification.class
 com/marketingagent/domain/contact/ContactAttribute.class
@@ -125,5 +128,6 @@ com/marketingagent/domain/user/UserStatus.class
 com/marketingagent/exception/ApplicationException.class
 com/marketingagent/dto/audience/SegmentDto.class
 com/marketingagent/repository/AudienceSnapshotMemberRepository.class
+com/marketingagent/webclient/whatsapp/WhatsAppMessageResponse.class
 com/marketingagent/domain/user/Membership.class
 com/marketingagent/exception/ConflictException.class
