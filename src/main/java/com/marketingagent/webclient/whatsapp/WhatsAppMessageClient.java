@@ -37,7 +37,7 @@ public class WhatsAppMessageClient {
         payload.put("template", Map.of(
                 "name", request.templateName(),
                 "language", Map.of("code", request.languageCode()),
-                "components", request.components() == null ? Collection.emptyList() : request.components()
+                "components", request.components() == null ? java.util.List.of() : request.components()
         ));
 
         return whatsAppWebClient.post()
