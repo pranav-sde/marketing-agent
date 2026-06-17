@@ -1,0 +1,14 @@
+package com.marketingagent.domain.audit;
+
+public enum AuditActionType {
+    CONTACT_IMPORT_CREATED,
+    CONSENT_RECORDED,
+    TEMPLATE_SUBMITTED,
+    CAMPAIGN_APPROVED,
+    CAMPAIGN_REJECTED,
+    BROADCAST_STARTED,
+    BROADCAST_PAUSED,
+    BROADCAST_CANCELED,
+    DATA_EXPORTED,
+    ADMIN_ACTION
+}
