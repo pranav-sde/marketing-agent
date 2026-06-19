@@ -9,8 +9,17 @@ public class WhatsAppClientProperties {
     private String baseUrl;
     private String apiVersion;
     private String accessToken;
+    private String phoneNumberId;
     private Duration connectTimeout = Duration.ofSeconds(5);
     private Duration responseTimeout = Duration.ofSeconds(30);
+
+    public String getPhoneNumberId() {
+        return phoneNumberId;
+    }
+
+    public void setPhoneNumberId(String phoneNumberId) {
+        this.phoneNumberId = phoneNumberId;
+    }
 
     public String getBaseUrl() {
         return baseUrl;

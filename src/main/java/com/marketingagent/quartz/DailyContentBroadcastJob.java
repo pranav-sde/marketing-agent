@@ -9,6 +9,7 @@ import com.marketingagent.domain.magazine.GeneratedContent;
 import com.marketingagent.repository.ContactRepository;
 import com.marketingagent.repository.ContentCalendarRepository;
 import com.marketingagent.repository.GeneratedContentRepository;
+import com.marketingagent.webclient.WhatsAppClientProperties;
 import com.marketingagent.webclient.whatsapp.WhatsAppMessageClient;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -33,16 +34,19 @@ public class DailyContentBroadcastJob implements Job {
     private final GeneratedContentRepository generatedContentRepository;
     private final ContactRepository contactRepository;
     private final WhatsAppMessageClient whatsAppMessageClient;
+    private final WhatsAppClientProperties whatsAppClientProperties;
 
     public DailyContentBroadcastJob(
             ContentCalendarRepository contentCalendarRepository,
             GeneratedContentRepository generatedContentRepository,
             ContactRepository contactRepository,
-            WhatsAppMessageClient whatsAppMessageClient) {
+            WhatsAppMessageClient whatsAppMessageClient,
+            WhatsAppClientProperties whatsAppClientProperties) {
         this.contentCalendarRepository = contentCalendarRepository;
         this.generatedContentRepository = generatedContentRepository;
         this.contactRepository = contactRepository;
         this.whatsAppMessageClient = whatsAppMessageClient;
+        this.whatsAppClientProperties = whatsAppClientProperties;
     }
 
     @Override
@@ -86,16 +90,19 @@ public class DailyContentBroadcastJob implements Job {
 
         for (Contact subscriber : subscribers) {
             try {
-                // Here we use the text message client
-                // Note: The original WhatsAppMessageClient only implements template messages right now.
-                // For MVP, if it supports text, we use it. Let's assume it has a text sending method or we log it.
-                // Since the original client uses TemplateMessageBuilder, we might need a TextMessageBuilder.
-                // We will just log the send attempt for MVP to simulate the API call.
-                
                 LOGGER.debug("Sending message to contact {}: {}", subscriber.getPhoneE164(), whatsappContent.getMessageText());
                 
-                // In reality, this would be:
-                // whatsAppMessageClient.sendTextMessage(subscriber.getPhoneE164(), whatsappContent.getMessageText());
+                String phoneId = whatsAppClientProperties.getPhoneNumberId();
+                if (phoneId == null || phoneId.isBlank() || phoneId.contains("placeholder")) {
+                    phoneId = "default_phone_number_id"; // Mock behavior if not configured
+                    LOGGER.warn("WhatsApp Phone Number ID not configured. Simulating send to {}", subscriber.getPhoneE164());
+                } else {
+                    whatsAppMessageClient.sendTextMessage(
+                            phoneId,
+                            subscriber.getPhoneE164(),
+                            whatsappContent.getMessageText()
+                    ).block();
+                }
                 
                 successCount++;
             } catch (Exception e) {

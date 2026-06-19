@@ -51,4 +51,27 @@ public class WhatsAppMessageClient {
                 )
                 .bodyToMono(WhatsAppMessageResponse.class);
     }
+
+    public Mono<WhatsAppMessageResponse> sendTextMessage(
+            String phoneNumberId,
+            String to,
+            String text
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", "text");
+        payload.put("text", Map.of("body", text, "preview_url", true));
+
+        return whatsAppWebClient.post()
+                .uri("/{version}/{phoneNumberId}/messages", properties.getApiVersion(), phoneNumberId)
+                .bodyValue(payload)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
+                        response.bodyToMono(String.class)
+                                .defaultIfEmpty("WhatsApp provider request failed")
+                                .map(ExternalProviderException::new)
+                )
+                .bodyToMono(WhatsAppMessageResponse.class);
+    }
 }

@@ -82,6 +82,7 @@ marketing-agent:
     base-url: ${WHATSAPP_BASE_URL:https://graph.facebook.com}
     api-version: ${WHATSAPP_API_VERSION:v20.0}
     access-token: ${WHATSAPP_ACCESS_TOKEN:placeholder_token}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:placeholder_phone_number_id}
     connect-timeout: ${WHATSAPP_CONNECT_TIMEOUT:5s}
     response-timeout: ${WHATSAPP_RESPONSE_TIMEOUT:30s}
   groq:
