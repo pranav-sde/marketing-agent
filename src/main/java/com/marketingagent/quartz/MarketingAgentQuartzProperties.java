@@ -7,6 +7,15 @@ public class MarketingAgentQuartzProperties {
 
     private String broadcastSchedulerCron;
     private String webhookReconciliationCron;
+    private String dailyContentBroadcastCron = "0 0 9 * * ?";
+
+    public String getDailyContentBroadcastCron() {
+        return dailyContentBroadcastCron;
+    }
+
+    public void setDailyContentBroadcastCron(String dailyContentBroadcastCron) {
+        this.dailyContentBroadcastCron = dailyContentBroadcastCron;
+    }
 
     public String getBroadcastSchedulerCron() {
         return broadcastSchedulerCron;

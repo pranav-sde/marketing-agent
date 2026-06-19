@@ -52,4 +52,24 @@ public class QuartzConfig {
                 .withSchedule(CronScheduleBuilder.cronSchedule(properties.getWebhookReconciliationCron()))
                 .build();
     }
+
+    @Bean
+    public JobDetail dailyContentBroadcastJobDetail() {
+        return JobBuilder.newJob(DailyContentBroadcastJob.class)
+                .withIdentity("dailyContentBroadcastJob")
+                .storeDurably()
+                .build();
+    }
+
+    @Bean
+    public Trigger dailyContentBroadcastTrigger(
+            JobDetail dailyContentBroadcastJobDetail,
+            MarketingAgentQuartzProperties properties
+    ) {
+        return TriggerBuilder.newTrigger()
+                .forJob(dailyContentBroadcastJobDetail)
+                .withIdentity("dailyContentBroadcastTrigger")
+                .withSchedule(CronScheduleBuilder.cronSchedule(properties.getDailyContentBroadcastCron()))
+                .build();
+    }
 }

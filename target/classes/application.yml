@@ -73,12 +73,26 @@ logging:
 marketing-agent:
   security:
     phone-hash-pepper: ${PHONE_HASH_PEPPER:change-me-in-production}
+    api-key: ${MARKETING_AGENT_API_KEY:}
   quartz:
     broadcast-scheduler-cron: ${BROADCAST_SCHEDULER_CRON:0 */1 * * * ?}
     webhook-reconciliation-cron: ${WEBHOOK_RECONCILIATION_CRON:0 */1 * * * ?}
+    daily-content-broadcast-cron: ${DAILY_CONTENT_BROADCAST_CRON:0 0 9 * * ?}
   whatsapp:
     base-url: ${WHATSAPP_BASE_URL:https://graph.facebook.com}
     api-version: ${WHATSAPP_API_VERSION:v20.0}
-    access-token: ${WHATSAPP_ACCESS_TOKEN:}
+    access-token: ${WHATSAPP_ACCESS_TOKEN:placeholder_token}
     connect-timeout: ${WHATSAPP_CONNECT_TIMEOUT:5s}
     response-timeout: ${WHATSAPP_RESPONSE_TIMEOUT:30s}
+  groq:
+    base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
+    api-key: ${GROQ_API_KEY:placeholder_api_key}
+    default-model: ${GROQ_DEFAULT_MODEL:llama3-70b-8192}
+  storage:
+    upload-dir: ${UPLOAD_DIR:./uploads}
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
