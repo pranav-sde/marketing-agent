@@ -5,12 +5,17 @@ import com.marketingagent.domain.magazine.Magazine;
 import com.marketingagent.domain.magazine.Story;
 import com.marketingagent.dto.magazine.ContentCalendarDto;
 import com.marketingagent.exception.ResourceNotFoundException;
+import com.marketingagent.domain.magazine.GeneratedContent;
+import com.marketingagent.domain.magazine.ContentPlatform;
+import com.marketingagent.repository.GeneratedContentRepository;
 import com.marketingagent.repository.ContentCalendarRepository;
 import com.marketingagent.repository.StoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,16 +32,19 @@ public class ContentCalendarService {
     private final StoryRepository storyRepository;
     private final ContentCalendarRepository contentCalendarRepository;
     private final ContentGenerationService contentGenerationService;
+    private final GeneratedContentRepository generatedContentRepository;
 
     public ContentCalendarService(
             MagazineService magazineService,
             StoryRepository storyRepository,
             ContentCalendarRepository contentCalendarRepository,
-            ContentGenerationService contentGenerationService) {
+            ContentGenerationService contentGenerationService,
+            GeneratedContentRepository generatedContentRepository) {
         this.magazineService = magazineService;
         this.storyRepository = storyRepository;
         this.contentCalendarRepository = contentCalendarRepository;
         this.contentGenerationService = contentGenerationService;
+        this.generatedContentRepository = generatedContentRepository;
     }
 
     @Transactional
@@ -51,7 +59,14 @@ public class ContentCalendarService {
         // Clean existing calendar for this magazine if regenerating
         List<ContentCalendar> existing = contentCalendarRepository.findByMagazine_IdOrderByDayNumberAsc(magazineId);
         if (!existing.isEmpty()) {
+            for (ContentCalendar entry : existing) {
+                List<GeneratedContent> generated = generatedContentRepository.findByCalendarEntry_Id(entry.getId());
+                if (!generated.isEmpty()) {
+                    generatedContentRepository.deleteAll(generated);
+                }
+            }
             contentCalendarRepository.deleteAll(existing);
+            contentCalendarRepository.flush();
         }
 
         List<ContentCalendar> calendarEntries = new ArrayList<>();
@@ -76,8 +91,17 @@ public class ContentCalendarService {
         calendarEntries = contentCalendarRepository.saveAll(calendarEntries);
         LOGGER.info("Generated 30-day content calendar for magazine {}", magazineId);
 
-        // Async trigger generation of the actual content posts for all 30 days
-        contentGenerationService.generateContentForCalendarAsync(magazineId);
+        // Async trigger generation of the actual content posts for all 30 days after transaction commits
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    contentGenerationService.generateContentForCalendarAsync(magazineId);
+                }
+            });
+        } else {
+            contentGenerationService.generateContentForCalendarAsync(magazineId);
+        }
 
         return calendarEntries.stream().map(ContentCalendarDto::from).collect(Collectors.toList());
     }
@@ -88,7 +112,12 @@ public class ContentCalendarService {
         magazineService.getMagazineEntity(tenantId, magazineId);
         return contentCalendarRepository.findByMagazine_IdOrderByDayNumberAsc(magazineId)
                 .stream()
-                .map(ContentCalendarDto::from)
+                .map(entry -> {
+                    String messageText = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entry.getId(), ContentPlatform.WHATSAPP)
+                            .map(GeneratedContent::getMessageText)
+                            .orElse(null);
+                    return ContentCalendarDto.from(entry, messageText);
+                })
                 .collect(Collectors.toList());
     }
 

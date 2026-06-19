@@ -88,6 +88,9 @@ public class GroqClient {
 
             JsonNode responseJson = objectMapper.readTree(responseStr);
             return responseJson.path("choices").get(0).path("message").path("content").asText();
+        } catch (org.springframework.web.reactive.function.client.WebClientResponseException e) {
+            LOGGER.error("Failed to call Groq API ({}): {}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new RuntimeException("Failed to generate content from Groq: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
             LOGGER.error("Failed to call Groq API: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to generate content from Groq", e);
@@ -95,7 +98,8 @@ public class GroqClient {
     }
     
     private String generateDummyResponse(String prompt) {
-        if (prompt.contains("extract stories") || prompt.contains("Extract all stories")) {
+        String lowerPrompt = prompt.toLowerCase();
+        if (lowerPrompt.contains("extract stories") || lowerPrompt.contains("extract all stories")) {
             return """
             [
               {

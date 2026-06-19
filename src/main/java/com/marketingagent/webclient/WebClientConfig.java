@@ -10,9 +10,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
+import com.marketingagent.webclient.groq.GroqClientProperties;
 
 @Configuration
-@EnableConfigurationProperties(WhatsAppClientProperties.class)
+@EnableConfigurationProperties({WhatsAppClientProperties.class, GroqClientProperties.class})
 public class WebClientConfig {
 
     @Bean

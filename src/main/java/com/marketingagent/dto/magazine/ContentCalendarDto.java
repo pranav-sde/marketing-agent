@@ -13,9 +13,14 @@ public record ContentCalendarDto(
         Integer dayNumber,
         String contentAngle,
         LocalDate scheduledDate,
-        ContentCalendarStatus status
+        ContentCalendarStatus status,
+        String messageText
 ) {
     public static ContentCalendarDto from(ContentCalendar calendar) {
+        return from(calendar, null);
+    }
+
+    public static ContentCalendarDto from(ContentCalendar calendar, String messageText) {
         return new ContentCalendarDto(
                 calendar.getId(),
                 calendar.getMagazine().getId(),
@@ -23,7 +28,8 @@ public record ContentCalendarDto(
                 calendar.getDayNumber(),
                 calendar.getContentAngle(),
                 calendar.getScheduledDate(),
-                calendar.getStatus()
+                calendar.getStatus(),
+                messageText
         );
     }
 }

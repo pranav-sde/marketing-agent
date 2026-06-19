@@ -66,27 +66,46 @@ public class ContentGenerationService {
         String ctaLink = "https://campaign.sailortoday.in/campaign?utmMedium=" + platformName;
 
         String systemPrompt = "You are an expert social media copywriter. You write engaging, highly converting short posts.";
-        String userPrompt = String.format("""
-                Create a %s marketing post based on the following story summary.
-                Story Title: %s
-                Summary: %s
-                Keywords: %s
-                Content Angle: %s
-                
-                Rules:
-                1. Length must be strictly between 150-200 characters.
-                2. Include 2-3 relevant emojis.
-                3. End with the exact Call to Action: "Subscribe: %s"
-                4. Include 2-3 hashtags.
-                5. Return ONLY the final message text, no explanations, no markdown blocks.
-                """,
-                platform.name(),
-                entry.getStory().getTitle(),
-                entry.getStory().getSummary(),
-                String.join(", ", entry.getStory().getKeywords() != null ? entry.getStory().getKeywords() : List.of()),
-                entry.getContentAngle(),
-                ctaLink
-        );
+        String userPrompt;
+        if (entry.getDayNumber() == 1) {
+            userPrompt = String.format("""
+                    Create a %s marketing post announcing that a new edition of the magazine has just been released.
+                    Magazine Title: %s
+                    
+                    Rules:
+                    1. Length must be strictly between 150-200 characters.
+                    2. Include 2-3 relevant emojis (like 📖, 🚀).
+                    3. End with the exact Call to Action: "Subscribe: %s"
+                    4. Include 2-3 hashtags (including #NewIssue).
+                    5. Return ONLY the final message text, no explanations, no markdown blocks.
+                    """,
+                    platform.name(),
+                    entry.getMagazine().getTitle(),
+                    ctaLink
+            );
+        } else {
+            userPrompt = String.format("""
+                    Create a %s marketing post based on the following story summary.
+                    Story Title: %s
+                    Summary: %s
+                    Keywords: %s
+                    Content Angle: %s
+                    
+                    Rules:
+                    1. Length must be strictly between 150-200 characters.
+                    2. Include 2-3 relevant emojis.
+                    3. End with the exact Call to Action: "Subscribe: %s"
+                    4. Include 2-3 hashtags.
+                    5. Return ONLY the final message text, no explanations, no markdown blocks.
+                    """,
+                    platform.name(),
+                    entry.getStory().getTitle(),
+                    entry.getStory().getSummary(),
+                    String.join(", ", entry.getStory().getKeywords() != null ? entry.getStory().getKeywords() : List.of()),
+                    entry.getContentAngle(),
+                    ctaLink
+            );
+        }
 
         String generatedMessage = groqClient.generateCompletion(systemPrompt, userPrompt);
         

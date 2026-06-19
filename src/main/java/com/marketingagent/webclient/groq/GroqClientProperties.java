@@ -9,7 +9,7 @@ public class GroqClientProperties {
 
     private String baseUrl = "https://api.groq.com/openai/v1";
     private String apiKey;
-    private String defaultModel = "llama3-70b-8192";
+    private String defaultModel = "llama-3.3-70b-versatile";
     private Duration connectTimeout = Duration.ofSeconds(5);
     private Duration responseTimeout = Duration.ofSeconds(60);
 

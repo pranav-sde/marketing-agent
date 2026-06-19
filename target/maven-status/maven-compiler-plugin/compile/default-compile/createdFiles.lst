@@ -56,6 +56,7 @@ com/marketingagent/domain/template/TemplateCategory.class
 com/marketingagent/domain/message/DeliveryEventType.class
 com/marketingagent/domain/audience/AudienceSnapshot.class
 com/marketingagent/repository/ContactChannelStateRepository.class
+com/marketingagent/service/MagazineService$1.class
 com/marketingagent/domain/campaign/CampaignAsset.class
 com/marketingagent/dto/agent/AgentTaskCreateRequest.class
 com/marketingagent/domain/agent/AgentTaskStatus.class
@@ -70,6 +71,7 @@ com/marketingagent/domain/tenant/TenantStatus.class
 com/marketingagent/domain/contact/ContactChannelState.class
 com/marketingagent/webclient/WebClientConfig.class
 com/marketingagent/exception/BadRequestException.class
+com/marketingagent/controller/TestController.class
 com/marketingagent/dto/contact/ContactDto.class
 com/marketingagent/repository/DataExportRepository.class
 com/marketingagent/service/ConsentService.class
@@ -144,6 +146,7 @@ com/marketingagent/domain/common/BaseEntity.class
 com/marketingagent/dto/campaign/CampaignCreateRequest.class
 com/marketingagent/repository/AuditLogRepository.class
 com/marketingagent/domain/audit/DataExport.class
+com/marketingagent/service/ContentCalendarService$1.class
 com/marketingagent/domain/broadcast/BroadcastBatch.class
 com/marketingagent/domain/campaign/ApprovalStatus.class
 com/marketingagent/dto/campaign/CampaignReviewRequest.class
