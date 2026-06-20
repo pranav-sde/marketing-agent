@@ -96,3 +96,8 @@ marketing-agent:
     default-model: ${GROQ_DEFAULT_MODEL:llama-3.3-70b-versatile}
   storage:
     upload-dir: ${UPLOAD_DIR:./uploads}
+    s3:
+      bucket: ${AWS_S3_BUCKET:}
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+      region: ${AWS_REGION:us-east-1}

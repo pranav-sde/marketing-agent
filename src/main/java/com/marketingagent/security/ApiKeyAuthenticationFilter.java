@@ -64,8 +64,8 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Allow webhook endpoints and actuator health checks without API key
-        return path.startsWith("/webhooks/") || path.startsWith("/actuator/");
+        // Allow webhook endpoints, actuator health checks, and static uploads without API key
+        return path.startsWith("/webhooks/") || path.startsWith("/actuator/") || path.startsWith("/uploads/");
     }
 
     private void setAuthenticated(String principal) {

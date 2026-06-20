@@ -30,6 +30,14 @@ public class WhatsAppMessageClient {
             String phoneNumberId,
             @Valid WhatsAppTemplateMessageRequest request
     ) {
+        return sendTemplateMessage(properties.getAccessToken(), phoneNumberId, request);
+    }
+
+    public Mono<WhatsAppMessageResponse> sendTemplateMessage(
+            String accessToken,
+            String phoneNumberId,
+            @Valid WhatsAppTemplateMessageRequest request
+    ) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("messaging_product", "whatsapp");
         payload.put("to", request.to());
@@ -42,6 +50,11 @@ public class WhatsAppMessageClient {
 
         return whatsAppWebClient.post()
                 .uri("/{version}/{phoneNumberId}/messages", properties.getApiVersion(), phoneNumberId)
+                .headers(headers -> {
+                    if (accessToken != null && !accessToken.isBlank()) {
+                        headers.setBearerAuth(accessToken);
+                    }
+                })
                 .bodyValue(payload)
                 .retrieve()
                 .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
@@ -57,6 +70,15 @@ public class WhatsAppMessageClient {
             String to,
             String text
     ) {
+        return sendTextMessage(properties.getAccessToken(), phoneNumberId, to, text);
+    }
+
+    public Mono<WhatsAppMessageResponse> sendTextMessage(
+            String accessToken,
+            String phoneNumberId,
+            String to,
+            String text
+    ) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("messaging_product", "whatsapp");
         payload.put("to", to);
@@ -65,6 +87,41 @@ public class WhatsAppMessageClient {
 
         return whatsAppWebClient.post()
                 .uri("/{version}/{phoneNumberId}/messages", properties.getApiVersion(), phoneNumberId)
+                .headers(headers -> {
+                    if (accessToken != null && !accessToken.isBlank()) {
+                        headers.setBearerAuth(accessToken);
+                    }
+                })
+                .bodyValue(payload)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->
+                        response.bodyToMono(String.class)
+                                .defaultIfEmpty("WhatsApp provider request failed")
+                                .map(ExternalProviderException::new)
+                )
+                .bodyToMono(WhatsAppMessageResponse.class);
+    }
+
+    public Mono<WhatsAppMessageResponse> sendImageMessage(
+            String accessToken,
+            String phoneNumberId,
+            String to,
+            String imageUrl,
+            String caption
+    ) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("messaging_product", "whatsapp");
+        payload.put("to", to);
+        payload.put("type", "image");
+        payload.put("image", Map.of("link", imageUrl, "caption", caption));
+
+        return whatsAppWebClient.post()
+                .uri("/{version}/{phoneNumberId}/messages", properties.getApiVersion(), phoneNumberId)
+                .headers(headers -> {
+                    if (accessToken != null && !accessToken.isBlank()) {
+                        headers.setBearerAuth(accessToken);
+                    }
+                })
                 .bodyValue(payload)
                 .retrieve()
                 .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(), response ->

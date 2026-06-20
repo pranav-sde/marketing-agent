@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.marketingagent.exception.ResourceNotFoundException;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -24,14 +26,17 @@ public class ContentGenerationService {
     private final ContentCalendarRepository contentCalendarRepository;
     private final GeneratedContentRepository generatedContentRepository;
     private final GroqClient groqClient;
+    private final MediaGenerationService mediaGenerationService;
 
     public ContentGenerationService(
             ContentCalendarRepository contentCalendarRepository,
             GeneratedContentRepository generatedContentRepository,
-            GroqClient groqClient) {
+            GroqClient groqClient,
+            MediaGenerationService mediaGenerationService) {
         this.contentCalendarRepository = contentCalendarRepository;
         this.generatedContentRepository = generatedContentRepository;
         this.groqClient = groqClient;
+        this.mediaGenerationService = mediaGenerationService;
     }
 
     @Async
@@ -54,6 +59,27 @@ public class ContentGenerationService {
                 contentCalendarRepository.save(entry);
             }
         }
+    }
+
+    @Transactional
+    public String regeneratePlatformContent(UUID entryId, ContentPlatform platform) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        
+        List<GeneratedContent> existing = generatedContentRepository.findByCalendarEntry_Id(entryId);
+        if (!existing.isEmpty()) {
+            generatedContentRepository.deleteAll(existing);
+            generatedContentRepository.flush();
+        }
+        
+        generatePlatformContent(entry, platform);
+        
+        entry.setStatus(ContentCalendarStatus.GENERATED);
+        contentCalendarRepository.save(entry);
+        
+        return generatedContentRepository.findByCalendarEntry_IdAndPlatform(entryId, platform)
+                .map(GeneratedContent::getMessageText)
+                .orElse("");
     }
 
     private void generatePlatformContent(ContentCalendar entry, ContentPlatform platform) {
@@ -115,6 +141,19 @@ public class ContentGenerationService {
                 generatedMessage.trim(),
                 platform
         );
+        
+        // Generate and upload media to storage (S3/Local fallback)
+        try {
+            String mediaUrl;
+            if (entry.getDayNumber() == 1) {
+                mediaUrl = mediaGenerationService.generateMagazineCover(entry.getMagazine());
+            } else {
+                mediaUrl = mediaGenerationService.generateContentMedia(entry);
+            }
+            content.setMediaUrl(mediaUrl);
+        } catch (Exception e) {
+            LOGGER.error("Failed to generate/upload media for calendar entry day {}", entry.getDayNumber(), e);
+        }
         
         // Example parsing hashtags, can be refined based on actual Llama output
         content.setHashtags(List.of("Marketing", "Agent")); 

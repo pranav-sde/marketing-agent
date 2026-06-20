@@ -25,7 +25,7 @@ public class WebhookReconciliationJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         try {
-            int processed = webhookEventService.markPendingWebhooksProcessed(Instant.now());
+            int processed = webhookEventService.processPendingWebhooks(Instant.now());
             LOGGER.info("Marked {} webhook events processed", processed);
         } catch (RuntimeException exception) {
             throw new JobExecutionException("Failed to reconcile webhook events", exception, false);

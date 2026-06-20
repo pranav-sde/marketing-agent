@@ -13,4 +13,6 @@ public interface ContactRepository extends JpaRepository<Contact, UUID> {
     Optional<Contact> findByTenant_IdAndPhoneHash(UUID tenantId, String phoneHash);
 
     List<Contact> findByTenant_IdAndStatus(UUID tenantId, ContactStatus status);
+
+    org.springframework.data.domain.Page<Contact> findByTenant_IdAndStatus(UUID tenantId, ContactStatus status, org.springframework.data.domain.Pageable pageable);
 }

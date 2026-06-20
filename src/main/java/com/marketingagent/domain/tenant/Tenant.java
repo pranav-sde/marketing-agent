@@ -40,6 +40,12 @@ public class Tenant extends BaseEntity {
     @Column(name = "default_locale", nullable = false, length = 16)
     private String defaultLocale = "en";
 
+    @Column(name = "whatsapp_access_token", length = 512)
+    private String whatsappAccessToken;
+
+    @Column(name = "whatsapp_phone_number_id", length = 120)
+    private String whatsappPhoneNumberId;
+
     protected Tenant() {
     }
 
@@ -88,5 +94,21 @@ public class Tenant extends BaseEntity {
 
     public void setDefaultLocale(String defaultLocale) {
         this.defaultLocale = defaultLocale;
+    }
+
+    public String getWhatsappAccessToken() {
+        return whatsappAccessToken;
+    }
+
+    public void setWhatsappAccessToken(String whatsappAccessToken) {
+        this.whatsappAccessToken = whatsappAccessToken;
+    }
+
+    public String getWhatsappPhoneNumberId() {
+        return whatsappPhoneNumberId;
+    }
+
+    public void setWhatsappPhoneNumberId(String whatsappPhoneNumberId) {
+        this.whatsappPhoneNumberId = whatsappPhoneNumberId;
     }
 }

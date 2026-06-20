@@ -33,10 +33,10 @@ public class TestController {
             return ResponseEntity.badRequest().body("No content calendar entries found for magazine. Please generate a calendar first.");
         }
 
-        // Set the first entry's scheduled date to today and status to GENERATED so the broadcast job picks it up
+        // Set the first entry's scheduled date to today and status to APPROVED so the broadcast job picks it up
         ContentCalendar entry = entries.get(0);
         entry.setScheduledDate(LocalDate.now());
-        entry.setStatus(ContentCalendarStatus.GENERATED);
+        entry.setStatus(ContentCalendarStatus.APPROVED);
         contentCalendarRepository.save(entry);
 
         try {

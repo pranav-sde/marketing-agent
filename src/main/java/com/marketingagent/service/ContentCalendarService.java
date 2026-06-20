@@ -1,6 +1,7 @@
 package com.marketingagent.service;
 
 import com.marketingagent.domain.magazine.ContentCalendar;
+import com.marketingagent.domain.magazine.ContentCalendarStatus;
 import com.marketingagent.domain.magazine.Magazine;
 import com.marketingagent.domain.magazine.Story;
 import com.marketingagent.dto.magazine.ContentCalendarDto;
@@ -9,6 +10,7 @@ import com.marketingagent.domain.magazine.GeneratedContent;
 import com.marketingagent.domain.magazine.ContentPlatform;
 import com.marketingagent.repository.GeneratedContentRepository;
 import com.marketingagent.repository.ContentCalendarRepository;
+import com.marketingagent.repository.ContentOutboundMessageRepository;
 import com.marketingagent.repository.StoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,18 +35,24 @@ public class ContentCalendarService {
     private final ContentCalendarRepository contentCalendarRepository;
     private final ContentGenerationService contentGenerationService;
     private final GeneratedContentRepository generatedContentRepository;
+    private final StorageService storageService;
+    private final ContentOutboundMessageRepository contentOutboundMessageRepository;
 
     public ContentCalendarService(
             MagazineService magazineService,
             StoryRepository storyRepository,
             ContentCalendarRepository contentCalendarRepository,
             ContentGenerationService contentGenerationService,
-            GeneratedContentRepository generatedContentRepository) {
+            GeneratedContentRepository generatedContentRepository,
+            StorageService storageService,
+            ContentOutboundMessageRepository contentOutboundMessageRepository) {
         this.magazineService = magazineService;
         this.storyRepository = storyRepository;
         this.contentCalendarRepository = contentCalendarRepository;
         this.contentGenerationService = contentGenerationService;
         this.generatedContentRepository = generatedContentRepository;
+        this.storageService = storageService;
+        this.contentOutboundMessageRepository = contentOutboundMessageRepository;
     }
 
     @Transactional
@@ -113,10 +121,11 @@ public class ContentCalendarService {
         return contentCalendarRepository.findByMagazine_IdOrderByDayNumberAsc(magazineId)
                 .stream()
                 .map(entry -> {
-                    String messageText = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entry.getId(), ContentPlatform.WHATSAPP)
-                            .map(GeneratedContent::getMessageText)
+                    GeneratedContent content = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entry.getId(), ContentPlatform.WHATSAPP)
                             .orElse(null);
-                    return ContentCalendarDto.from(entry, messageText);
+                    String messageText = content != null ? content.getMessageText() : null;
+                    String mediaUrl = content != null ? content.getMediaUrl() : null;
+                    return ContentCalendarDto.from(entry, messageText, mediaUrl);
                 })
                 .collect(Collectors.toList());
     }
@@ -127,5 +136,146 @@ public class ContentCalendarService {
                 .filter(entry -> entry.dayNumber().equals(dayNumber))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar day", UUID.randomUUID()));
+    }
+
+    @Transactional
+    public ContentCalendarDto approveEntry(UUID tenantId, UUID entryId) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+        entry.setStatus(ContentCalendarStatus.APPROVED);
+        ContentCalendar saved = contentCalendarRepository.save(entry);
+        
+        GeneratedContent content = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entryId, ContentPlatform.WHATSAPP)
+                .orElse(null);
+        String messageText = content != null ? content.getMessageText() : null;
+        String mediaUrl = content != null ? content.getMediaUrl() : null;
+        return ContentCalendarDto.from(saved, messageText, mediaUrl);
+    }
+
+    @Transactional
+    public ContentCalendarDto onHoldEntry(UUID tenantId, UUID entryId) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+        entry.setStatus(ContentCalendarStatus.ON_HOLD);
+        ContentCalendar saved = contentCalendarRepository.save(entry);
+        
+        GeneratedContent content = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entryId, ContentPlatform.WHATSAPP)
+                .orElse(null);
+        String messageText = content != null ? content.getMessageText() : null;
+        String mediaUrl = content != null ? content.getMediaUrl() : null;
+        return ContentCalendarDto.from(saved, messageText, mediaUrl);
+    }
+
+    @Transactional
+    public void deleteEntry(UUID tenantId, UUID entryId) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+        
+        List<GeneratedContent> generated = generatedContentRepository.findByCalendarEntry_Id(entryId);
+        if (!generated.isEmpty()) {
+            generatedContentRepository.deleteAll(generated);
+        }
+        contentCalendarRepository.delete(entry);
+    }
+
+    @Transactional
+    public ContentCalendarDto editEntryMessage(UUID tenantId, UUID entryId, String newMessageText, String newMediaUrl) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+        
+        GeneratedContent generated = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entryId, ContentPlatform.WHATSAPP)
+                .orElseThrow(() -> new IllegalStateException("No content generated for this entry yet."));
+        
+        generated.setMessageText(newMessageText);
+        generated.setMediaUrl(newMediaUrl);
+        generatedContentRepository.save(generated);
+        
+        return ContentCalendarDto.from(entry, newMessageText, newMediaUrl);
+    }
+
+    @Transactional
+    public ContentCalendarDto regenerateEntry(UUID tenantId, UUID entryId) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+        
+        contentGenerationService.regeneratePlatformContent(entryId, ContentPlatform.WHATSAPP);
+        
+        // Refresh the entity state
+        ContentCalendar refreshedEntry = contentCalendarRepository.findById(entryId).orElse(entry);
+        GeneratedContent content = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entryId, ContentPlatform.WHATSAPP)
+                .orElse(null);
+        String messageText = content != null ? content.getMessageText() : null;
+        String mediaUrl = content != null ? content.getMediaUrl() : null;
+        return ContentCalendarDto.from(refreshedEntry, messageText, mediaUrl);
+    }
+
+    @Transactional
+    public ContentCalendarDto uploadEntryMedia(UUID tenantId, UUID entryId, org.springframework.web.multipart.MultipartFile file) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+
+        GeneratedContent generated = generatedContentRepository.findByCalendarEntry_IdAndPlatform(entryId, ContentPlatform.WHATSAPP)
+                .orElseThrow(() -> new IllegalStateException("No content generated for this entry yet."));
+
+        try {
+            String extension = "jpg";
+            if (file.getOriginalFilename() != null && file.getOriginalFilename().toLowerCase().endsWith(".png")) {
+                extension = "png";
+            }
+            String key = "custom-media-" + UUID.randomUUID() + "." + extension;
+            String mediaUrl = storageService.uploadFile(key, file.getBytes(), file.getContentType());
+            generated.setMediaUrl(mediaUrl);
+            generatedContentRepository.save(generated);
+            
+            return ContentCalendarDto.from(entry, generated.getMessageText(), mediaUrl);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to read file", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public com.marketingagent.dto.message.ContentAnalyticsDto getAnalytics(UUID tenantId, UUID entryId) {
+        ContentCalendar entry = contentCalendarRepository.findById(entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("ContentCalendar entry", entryId));
+        if (!entry.getTenant().getId().equals(tenantId)) {
+            throw new ResourceNotFoundException("ContentCalendar entry", entryId);
+        }
+
+        List<Object[]> counts = contentOutboundMessageRepository.countStatusByCalendarEntryId(entryId);
+        long sent = 0;
+        long delivered = 0;
+        long read = 0;
+        long failed = 0;
+
+        for (Object[] row : counts) {
+            com.marketingagent.domain.message.OutboundMessageStatus status = (com.marketingagent.domain.message.OutboundMessageStatus) row[0];
+            long count = ((Number) row[1]).longValue();
+            switch (status) {
+                case SENT: sent += count; break;
+                case DELIVERED: delivered += count; break;
+                case READ: read += count; break;
+                case FAILED: failed += count; break;
+                default: break; // Ignore PENDING, QUEUED etc
+            }
+        }
+        return new com.marketingagent.dto.message.ContentAnalyticsDto(sent, delivered, read, failed);
     }
 }

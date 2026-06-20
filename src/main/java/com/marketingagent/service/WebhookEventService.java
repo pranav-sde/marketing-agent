@@ -36,11 +36,67 @@ public class WebhookEventService {
     }
 
     @Transactional
-    public int markPendingWebhooksProcessed(Instant processedAt) {
+    public int processPendingWebhooks(Instant processedAt) {
         var events = providerWebhookEventRepository.findByProcessedAtIsNullOrderByReceivedAtAsc();
-        events.forEach(event -> event.setProcessedAt(processedAt));
+        for (ProviderWebhookEvent event : events) {
+            try {
+                processWebhookPayload(event.getPayload());
+            } catch (Exception e) {
+                // Log and ignore to prevent one bad webhook from halting all processing
+            }
+            event.setProcessedAt(processedAt);
+        }
         providerWebhookEventRepository.saveAll(events);
         return events.size();
+    }
+
+    private void processWebhookPayload(java.util.Map<String, Object> payload) {
+        // Basic naive traversal of WhatsApp Webhook Payload to find "statuses"
+        if (payload == null || !payload.containsKey("entry")) return;
+        
+        java.util.List<java.util.Map<String, Object>> entries = (java.util.List<java.util.Map<String, Object>>) payload.get("entry");
+        for (java.util.Map<String, Object> entry : entries) {
+            if (!entry.containsKey("changes")) continue;
+            java.util.List<java.util.Map<String, Object>> changes = (java.util.List<java.util.Map<String, Object>>) entry.get("changes");
+            for (java.util.Map<String, Object> change : changes) {
+                java.util.Map<String, Object> value = (java.util.Map<String, Object>) change.get("value");
+                if (value != null && value.containsKey("statuses")) {
+                    java.util.List<java.util.Map<String, Object>> statuses = (java.util.List<java.util.Map<String, Object>>) value.get("statuses");
+                    for (java.util.Map<String, Object> statusObj : statuses) {
+                        String wamid = (String) statusObj.get("id");
+                        String statusStr = (String) statusObj.get("status");
+                        if (wamid != null && statusStr != null) {
+                            updateOutboundMessageStatus(wamid, statusStr);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.marketingagent.repository.ContentOutboundMessageRepository contentOutboundMessageRepository;
+
+    private void updateOutboundMessageStatus(String wamid, String status) {
+        contentOutboundMessageRepository.findByProviderMessageId(wamid).ifPresent(msg -> {
+            switch (status.toLowerCase()) {
+                case "delivered":
+                    msg.setStatus(com.marketingagent.domain.message.OutboundMessageStatus.DELIVERED);
+                    break;
+                case "read":
+                    msg.setStatus(com.marketingagent.domain.message.OutboundMessageStatus.READ);
+                    break;
+                case "failed":
+                    msg.setStatus(com.marketingagent.domain.message.OutboundMessageStatus.FAILED);
+                    break;
+                case "sent":
+                    if (msg.getStatus() == com.marketingagent.domain.message.OutboundMessageStatus.PENDING) {
+                        msg.setStatus(com.marketingagent.domain.message.OutboundMessageStatus.SENT);
+                    }
+                    break;
+            }
+            contentOutboundMessageRepository.save(msg);
+        });
     }
 
     private ProviderWebhookEvent persistWebhook(WebhookIngestRequest request) {

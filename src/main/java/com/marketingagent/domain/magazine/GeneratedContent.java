@@ -53,6 +53,9 @@ public class GeneratedContent extends BaseEntity {
     @Column(name = "platform", nullable = false, length = 50)
     private ContentPlatform platform;
 
+    @Column(name = "media_url", length = 1024)
+    private String mediaUrl;
+
     @Column(name = "groq_request_id", length = 255)
     private String groqRequestId;
 
@@ -84,6 +87,9 @@ public class GeneratedContent extends BaseEntity {
 
     public ContentPlatform getPlatform() { return platform; }
     public void setPlatform(ContentPlatform platform) { this.platform = platform; }
+
+    public String getMediaUrl() { return mediaUrl; }
+    public void setMediaUrl(String mediaUrl) { this.mediaUrl = mediaUrl; }
 
     public String getGroqRequestId() { return groqRequestId; }
     public void setGroqRequestId(String groqRequestId) { this.groqRequestId = groqRequestId; }

@@ -6,11 +6,15 @@ import com.marketingagent.domain.magazine.ContentCalendar;
 import com.marketingagent.domain.magazine.ContentCalendarStatus;
 import com.marketingagent.domain.magazine.ContentPlatform;
 import com.marketingagent.domain.magazine.GeneratedContent;
+import com.marketingagent.domain.message.ContentOutboundMessage;
+import com.marketingagent.domain.message.OutboundMessageStatus;
 import com.marketingagent.repository.ContactRepository;
 import com.marketingagent.repository.ContentCalendarRepository;
+import com.marketingagent.repository.ContentOutboundMessageRepository;
 import com.marketingagent.repository.GeneratedContentRepository;
 import com.marketingagent.webclient.WhatsAppClientProperties;
 import com.marketingagent.webclient.whatsapp.WhatsAppMessageClient;
+import com.marketingagent.webclient.whatsapp.WhatsAppMessageResponse;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -19,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -33,6 +38,7 @@ public class DailyContentBroadcastJob implements Job {
     private final ContentCalendarRepository contentCalendarRepository;
     private final GeneratedContentRepository generatedContentRepository;
     private final ContactRepository contactRepository;
+    private final ContentOutboundMessageRepository contentOutboundMessageRepository;
     private final WhatsAppMessageClient whatsAppMessageClient;
     private final WhatsAppClientProperties whatsAppClientProperties;
 
@@ -40,11 +46,13 @@ public class DailyContentBroadcastJob implements Job {
             ContentCalendarRepository contentCalendarRepository,
             GeneratedContentRepository generatedContentRepository,
             ContactRepository contactRepository,
+            ContentOutboundMessageRepository contentOutboundMessageRepository,
             WhatsAppMessageClient whatsAppMessageClient,
             WhatsAppClientProperties whatsAppClientProperties) {
         this.contentCalendarRepository = contentCalendarRepository;
         this.generatedContentRepository = generatedContentRepository;
         this.contactRepository = contactRepository;
+        this.contentOutboundMessageRepository = contentOutboundMessageRepository;
         this.whatsAppMessageClient = whatsAppMessageClient;
         this.whatsAppClientProperties = whatsAppClientProperties;
     }
@@ -55,11 +63,11 @@ public class DailyContentBroadcastJob implements Job {
         LocalDate today = LocalDate.now();
         LOGGER.info("Starting Daily Content Broadcast for date: {}", today);
 
-        // Find all GENERATED calendar entries scheduled for today
-        List<ContentCalendar> todaysEntries = contentCalendarRepository.findByScheduledDateAndStatus(today, ContentCalendarStatus.GENERATED);
+        // Find all APPROVED calendar entries scheduled for today
+        List<ContentCalendar> todaysEntries = contentCalendarRepository.findByScheduledDateAndStatus(today, ContentCalendarStatus.APPROVED);
 
         if (todaysEntries.isEmpty()) {
-            LOGGER.info("No content calendar entries scheduled for broadcast today.");
+            LOGGER.info("No approved content calendar entries scheduled for broadcast today.");
             return;
         }
 
@@ -85,28 +93,72 @@ public class DailyContentBroadcastJob implements Job {
 
         LOGGER.info("Found {} active subscribers for Tenant {}", subscribers.size(), entry.getTenant().getId());
 
+        // Resolve credentials per tenant
+        com.marketingagent.domain.tenant.Tenant tenant = entry.getTenant();
+        String phoneId = tenant.getWhatsappPhoneNumberId();
+        String accessToken = tenant.getWhatsappAccessToken();
+
+        if (phoneId == null || phoneId.isBlank()) {
+            phoneId = whatsAppClientProperties.getPhoneNumberId();
+        }
+        if (accessToken == null || accessToken.isBlank()) {
+            accessToken = whatsAppClientProperties.getAccessToken();
+        }
+
         int successCount = 0;
         int failCount = 0;
 
         for (Contact subscriber : subscribers) {
+            ContentOutboundMessage outboundMessage = new ContentOutboundMessage(tenant, subscriber, ContentPlatform.WHATSAPP);
+            outboundMessage.setCalendarEntry(entry);
+            outboundMessage.setStatus(OutboundMessageStatus.PENDING);
+            outboundMessage = contentOutboundMessageRepository.save(outboundMessage);
+
             try {
-                LOGGER.debug("Sending message to contact {}: {}", subscriber.getPhoneE164(), whatsappContent.getMessageText());
+                String mediaUrl = whatsappContent.getMediaUrl();
+                boolean hasMedia = mediaUrl != null && !mediaUrl.isBlank();
                 
-                String phoneId = whatsAppClientProperties.getPhoneNumberId();
+                LOGGER.debug("Sending message to contact {}: {}. Has media: {}", 
+                        subscriber.getPhoneE164(), whatsappContent.getMessageText(), hasMedia);
+                
+                WhatsAppMessageResponse response = null;
+
                 if (phoneId == null || phoneId.isBlank() || phoneId.contains("placeholder")) {
                     phoneId = "default_phone_number_id"; // Mock behavior if not configured
-                    LOGGER.warn("WhatsApp Phone Number ID not configured. Simulating send to {}", subscriber.getPhoneE164());
+                    LOGGER.warn("WhatsApp Phone Number ID not configured. Simulating send to {} (media: {})", 
+                            subscriber.getPhoneE164(), mediaUrl);
+                    outboundMessage.setProviderMessageId("mock-wamid-" + java.util.UUID.randomUUID().toString());
                 } else {
-                    whatsAppMessageClient.sendTextMessage(
-                            phoneId,
-                            subscriber.getPhoneE164(),
-                            whatsappContent.getMessageText()
-                    ).block();
+                    if (hasMedia) {
+                        response = whatsAppMessageClient.sendImageMessage(
+                                accessToken,
+                                phoneId,
+                                subscriber.getPhoneE164(),
+                                mediaUrl,
+                                whatsappContent.getMessageText()
+                        ).block();
+                    } else {
+                        response = whatsAppMessageClient.sendTextMessage(
+                                accessToken,
+                                phoneId,
+                                subscriber.getPhoneE164(),
+                                whatsappContent.getMessageText()
+                        ).block();
+                    }
+                    if (response != null && response.messages() != null && !response.messages().isEmpty()) {
+                        outboundMessage.setProviderMessageId(response.messages().get(0).get("id").toString());
+                    }
                 }
                 
+                outboundMessage.setStatus(OutboundMessageStatus.SENT);
+                outboundMessage.setSentAt(Instant.now());
+                contentOutboundMessageRepository.save(outboundMessage);
                 successCount++;
             } catch (Exception e) {
                 LOGGER.error("Failed to send message to contact {}", subscriber.getId(), e);
+                outboundMessage.setStatus(OutboundMessageStatus.FAILED);
+                outboundMessage.setLastErrorMessage(e.getMessage() != null && e.getMessage().length() > 500 ? e.getMessage().substring(0, 499) : e.getMessage());
+                contentOutboundMessageRepository.save(outboundMessage);
                 failCount++;
             }
         }

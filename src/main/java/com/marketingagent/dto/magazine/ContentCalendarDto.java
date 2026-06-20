@@ -14,13 +14,18 @@ public record ContentCalendarDto(
         String contentAngle,
         LocalDate scheduledDate,
         ContentCalendarStatus status,
-        String messageText
+        String messageText,
+        String mediaUrl
 ) {
     public static ContentCalendarDto from(ContentCalendar calendar) {
-        return from(calendar, null);
+        return from(calendar, null, null);
     }
 
     public static ContentCalendarDto from(ContentCalendar calendar, String messageText) {
+        return from(calendar, messageText, null);
+    }
+
+    public static ContentCalendarDto from(ContentCalendar calendar, String messageText, String mediaUrl) {
         return new ContentCalendarDto(
                 calendar.getId(),
                 calendar.getMagazine().getId(),
@@ -29,7 +34,8 @@ public record ContentCalendarDto(
                 calendar.getContentAngle(),
                 calendar.getScheduledDate(),
                 calendar.getStatus(),
-                messageText
+                messageText,
+                mediaUrl
         );
     }
 }
