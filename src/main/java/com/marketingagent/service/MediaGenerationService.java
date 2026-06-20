@@ -54,12 +54,15 @@ public class MediaGenerationService {
 
             LOGGER.info("Rendering PDF cover page for magazine: {}", magazine.getTitle());
             PDFRenderer pdfRenderer = new PDFRenderer(document);
-            // Render first page (0) at 150 DPI
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 150);
+            // Render first page (0) at 72 DPI to save memory
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 72);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(bim, "png", baos);
             byte[] imageBytes = baos.toByteArray();
+            
+            bim.flush();
+            bim = null;
 
             String key = "magazine-cover-" + magazine.getId() + ".png";
             return storageService.uploadFile(key, imageBytes, "image/png");
@@ -111,11 +114,15 @@ public class MediaGenerationService {
 
             LOGGER.info("Rendering PDF page {} for content calendar day {}", pageIndex, entry.getDayNumber());
             PDFRenderer pdfRenderer = new PDFRenderer(document);
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(pageIndex, 150);
+            // Render at 72 DPI to save memory in Render's 512MB limit
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(pageIndex, 72);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(bim, "png", baos);
             byte[] imageBytes = baos.toByteArray();
+            
+            bim.flush();
+            bim = null;
 
             String key = "media-pdf-page-" + entry.getDayNumber() + "-" + UUID.randomUUID() + ".png";
             return storageService.uploadFile(key, imageBytes, "image/png");
