@@ -31,16 +31,19 @@ public class MagazineService {
     private final TenantService tenantService;
     private final MagazineRepository magazineRepository;
     private final StoryExtractionService storyExtractionService;
+    private final StorageService storageService;
     private final String uploadDir;
 
     public MagazineService(
             TenantService tenantService,
             MagazineRepository magazineRepository,
             StoryExtractionService storyExtractionService,
+            StorageService storageService,
             @Value("${marketing-agent.storage.upload-dir:./uploads}") String uploadDir) {
         this.tenantService = tenantService;
         this.magazineRepository = magazineRepository;
         this.storyExtractionService = storyExtractionService;
+        this.storageService = storageService;
         this.uploadDir = uploadDir;
     }
 
@@ -57,6 +60,15 @@ public class MagazineService {
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
             Path targetLocation = tenantDir.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation);
+
+            // Upload to S3
+            String s3Key = "magazines/" + tenantId.toString() + "/" + fileName;
+            try {
+                storageService.uploadFile(s3Key, Files.readAllBytes(targetLocation), file.getContentType());
+                LOGGER.info("Magazine PDF uploaded to S3 at key: {}", s3Key);
+            } catch (Exception e) {
+                LOGGER.error("Failed to upload magazine PDF to S3: {}", s3Key, e);
+            }
 
             // Create Magazine record
             Magazine magazine = new Magazine(tenant, file.getOriginalFilename(), targetLocation.toAbsolutePath().toString());
