@@ -32,6 +32,8 @@ public class MagazineService {
     private final MagazineRepository magazineRepository;
     private final StoryExtractionService storyExtractionService;
     private final StorageService storageService;
+    private final com.marketingagent.repository.StoryRepository storyRepository;
+    private final com.marketingagent.repository.ContentCalendarRepository contentCalendarRepository;
     private final String uploadDir;
 
     public MagazineService(
@@ -39,12 +41,40 @@ public class MagazineService {
             MagazineRepository magazineRepository,
             StoryExtractionService storyExtractionService,
             StorageService storageService,
+            com.marketingagent.repository.StoryRepository storyRepository,
+            com.marketingagent.repository.ContentCalendarRepository contentCalendarRepository,
             @Value("${marketing-agent.storage.upload-dir:./uploads}") String uploadDir) {
         this.tenantService = tenantService;
         this.magazineRepository = magazineRepository;
         this.storyExtractionService = storyExtractionService;
         this.storageService = storageService;
+        this.storyRepository = storyRepository;
+        this.contentCalendarRepository = contentCalendarRepository;
         this.uploadDir = uploadDir;
+    }
+
+    @Transactional
+    public void deleteMagazine(UUID tenantId, UUID magazineId) {
+        Magazine magazine = getMagazineEntity(tenantId, magazineId);
+        
+        String filePath = magazine.getFilePath();
+        if (filePath != null && filePath.startsWith("http")) {
+            try {
+                java.net.URL url = new java.net.URL(filePath);
+                String path = url.getPath();
+                if (path.startsWith("/")) {
+                    path = path.substring(1);
+                }
+                storageService.deleteFile(path);
+            } catch (Exception e) {
+                LOGGER.error("Failed to parse S3 URL for deletion: {}", filePath, e);
+            }
+        }
+        
+        contentCalendarRepository.deleteByMagazine_Id(magazineId);
+        storyRepository.deleteByMagazine_Id(magazineId);
+        magazineRepository.delete(magazine);
+        LOGGER.info("Successfully deleted magazine {}", magazineId);
     }
 
     @Transactional

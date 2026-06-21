@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface ContentCalendarRepository extends JpaRepository<ContentCalendar, UUID> {
     List<ContentCalendar> findByMagazine_IdOrderByDayNumberAsc(UUID magazineId);
     List<ContentCalendar> findByScheduledDateAndStatus(LocalDate date, ContentCalendarStatus status);
+    void deleteByMagazine_Id(UUID magazineId);
 }

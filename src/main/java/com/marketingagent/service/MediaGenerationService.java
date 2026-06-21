@@ -40,43 +40,52 @@ public class MediaGenerationService {
             return getStockFallbackUrl("shipping,marine");
         }
 
-        File pdfFile;
+        File pdfFile = null;
+        boolean isTempFile = false;
         try {
+            if (filePath.startsWith("http")) {
+                isTempFile = true;
+            }
             pdfFile = getLocalFile(filePath);
         } catch (Exception e) {
             LOGGER.error("Failed to download or read magazine PDF at {}. Using stock cover fallback.", filePath, e);
             return getStockFallbackUrl("shipping,marine");
         }
 
-        if (!pdfFile.exists()) {
-            LOGGER.warn("Magazine PDF file not found at path: {}. Using stock cover fallback.", filePath);
-            return getStockFallbackUrl("shipping,marine");
-        }
-
-        try (PDDocument document = Loader.loadPDF(pdfFile)) {
-            if (document.getNumberOfPages() == 0) {
-                LOGGER.warn("Magazine PDF is empty. Using stock cover fallback.");
+        try {
+            if (!pdfFile.exists()) {
+                LOGGER.warn("Magazine PDF file not found at path: {}. Using stock cover fallback.", filePath);
                 return getStockFallbackUrl("shipping,marine");
             }
 
-            LOGGER.info("Rendering PDF cover page for magazine: {}", magazine.getTitle());
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            // Render first page (0) at 72 DPI to save memory
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 72);
+            try (PDDocument document = Loader.loadPDF(pdfFile)) {
+                if (document.getNumberOfPages() == 0) {
+                    LOGGER.warn("Magazine PDF is empty. Using stock cover fallback.");
+                    return getStockFallbackUrl("shipping,marine");
+                }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(bim, "png", baos);
-            byte[] imageBytes = baos.toByteArray();
-            
-            bim.flush();
-            bim = null;
+                LOGGER.info("Rendering PDF cover page for magazine: {}", magazine.getTitle());
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                // Render first page (0) at 72 DPI to save memory
+                BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 72);
 
-            String key = "magazine-cover-" + magazine.getId() + ".png";
-            return storageService.uploadFile(key, imageBytes, "image/png");
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(bim, "png", baos);
+                byte[] imageBytes = baos.toByteArray();
+                
+                bim.flush();
 
-        } catch (Exception e) {
-            LOGGER.error("Failed to render magazine PDF cover. Falling back to stock cover.", e);
-            return getStockFallbackUrl("shipping,marine");
+                String key = "magazine-cover-" + magazine.getId() + ".png";
+                return storageService.uploadFile(key, imageBytes, "image/png");
+
+            } catch (Exception e) {
+                LOGGER.error("Failed to render magazine PDF cover. Falling back to stock cover.", e);
+                return getStockFallbackUrl("shipping,marine");
+            }
+        } finally {
+            if (isTempFile && pdfFile != null && pdfFile.exists()) {
+                pdfFile.delete();
+            }
         }
     }
 
@@ -85,8 +94,13 @@ public class MediaGenerationService {
         if (magazine != null) {
             String filePath = magazine.getFilePath();
             if (filePath != null && !filePath.isBlank()) {
+                File magFile = null;
+                boolean isTempFile = false;
                 try {
-                    File magFile = getLocalFile(filePath);
+                    if (filePath.startsWith("http")) {
+                        isTempFile = true;
+                    }
+                    magFile = getLocalFile(filePath);
                     if (magFile.exists()) {
                         String mimeType = magazine.getMimeType();
                         if (mimeType != null && mimeType.toLowerCase().contains("pdf")) {
@@ -101,6 +115,10 @@ public class MediaGenerationService {
                     }
                 } catch (Exception e) {
                     LOGGER.error("Failed to generate media from magazine file. Using fallback.", e);
+                } finally {
+                    if (isTempFile && magFile != null && magFile.exists()) {
+                        magFile.delete();
+                    }
                 }
             }
         }
@@ -112,10 +130,10 @@ public class MediaGenerationService {
     private File getLocalFile(String path) throws Exception {
         if (path.startsWith("http")) {
             File tempFile = File.createTempFile("mag-dl-", path.toLowerCase().endsWith(".pdf") ? ".pdf" : ".tmp");
-            byte[] bytes = restTemplate.getForObject(path, byte[].class);
-            if (bytes != null) {
-                java.nio.file.Files.write(tempFile.toPath(), bytes);
-            }
+            restTemplate.execute(path, org.springframework.http.HttpMethod.GET, null, clientHttpResponse -> {
+                java.nio.file.Files.copy(clientHttpResponse.getBody(), tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return null;
+            });
             return tempFile;
         }
         return new File(path);

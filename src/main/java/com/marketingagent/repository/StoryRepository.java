@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface StoryRepository extends JpaRepository<Story, UUID> {
     List<Story> findByMagazine_Id(UUID magazineId);
+    void deleteByMagazine_Id(UUID magazineId);
 }

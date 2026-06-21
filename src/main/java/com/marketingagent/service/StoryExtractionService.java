@@ -95,21 +95,30 @@ public class StoryExtractionService {
     }
 
     private String extractTextFromPdf(String filePath) throws Exception {
-        File pdfFile;
-        if (filePath.startsWith("http")) {
-            pdfFile = File.createTempFile("extract-", ".pdf");
-            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
-            byte[] bytes = restTemplate.getForObject(filePath, byte[].class);
-            if (bytes != null) {
-                java.nio.file.Files.write(pdfFile.toPath(), bytes);
+        File pdfFile = null;
+        boolean isTempFile = false;
+        try {
+            if (filePath.startsWith("http")) {
+                File tempFile = File.createTempFile("extract-", ".pdf");
+                pdfFile = tempFile;
+                isTempFile = true;
+                org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+                restTemplate.execute(filePath, org.springframework.http.HttpMethod.GET, null, clientHttpResponse -> {
+                    java.nio.file.Files.copy(clientHttpResponse.getBody(), tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    return null;
+                });
+            } else {
+                pdfFile = new File(filePath);
             }
-        } else {
-            pdfFile = new File(filePath);
-        }
 
-        try (PDDocument document = org.apache.pdfbox.Loader.loadPDF(pdfFile)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(document);
+            try (PDDocument document = org.apache.pdfbox.Loader.loadPDF(pdfFile)) {
+                PDFTextStripper stripper = new PDFTextStripper();
+                return stripper.getText(document);
+            }
+        } finally {
+            if (isTempFile && pdfFile != null && pdfFile.exists()) {
+                pdfFile.delete();
+            }
         }
     }
 }

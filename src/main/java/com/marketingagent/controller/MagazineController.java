@@ -90,4 +90,12 @@ public class MagazineController {
             @PathVariable UUID magazineId) {
         return ResponseEntity.ok(contentCalendarService.getCalendar(tenantId, magazineId));
     }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{magazineId}")
+    public ResponseEntity<Void> deleteMagazine(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID magazineId) {
+        magazineService.deleteMagazine(tenantId, magazineId);
+        return ResponseEntity.noContent().build();
+    }
 }

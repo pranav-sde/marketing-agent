@@ -74,8 +74,23 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(
+            org.springframework.web.server.ResponseStatusException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.valueOf(exception.getStatusCode().value()),
+                ErrorCode.VALIDATION_FAILED,
+                exception.getReason() != null ? exception.getReason() : exception.getMessage(),
+                request,
+                Map.of()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception, HttpServletRequest request) {
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class).error("Unexpected server error", exception);
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCode.INTERNAL_ERROR,

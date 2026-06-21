@@ -115,6 +115,29 @@ public class StorageService {
         return Files.exists(targetFile);
     }
 
+    public void deleteFile(String key) {
+        if (isS3Enabled) {
+            try {
+                software.amazon.awssdk.services.s3.model.DeleteObjectRequest deleteRequest = software.amazon.awssdk.services.s3.model.DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .build();
+                s3Client.deleteObject(deleteRequest);
+                LOGGER.info("Successfully deleted file from AWS S3: {}", key);
+            } catch (Exception e) {
+                LOGGER.error("Failed to delete file from S3", e);
+            }
+        } else {
+            try {
+                Path targetFile = Paths.get(uploadDir, "s3-mock", key);
+                Files.deleteIfExists(targetFile);
+                LOGGER.info("Successfully deleted file from local mock storage: {}", key);
+            } catch (IOException e) {
+                LOGGER.error("Failed to delete file from local storage", e);
+            }
+        }
+    }
+
     public String getFileUrl(String key) {
         if (isS3Enabled) {
             return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
