@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         // Serve uploads folder statically for mock S3 media access
                         .requestMatchers("/uploads/**").permitAll()
+                        // Allow Spring Boot error endpoint to return proper error messages instead of 403
+                        .requestMatchers("/error").permitAll()
                         // Everything else requires authentication via API key filter
                         .anyRequest().authenticated()
                 )

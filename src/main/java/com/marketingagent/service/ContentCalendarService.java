@@ -61,7 +61,7 @@ public class ContentCalendarService {
         List<Story> stories = storyRepository.findByMagazine_Id(magazineId);
 
         if (stories.isEmpty()) {
-            throw new IllegalStateException("No stories extracted from this magazine yet.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "No stories extracted from this magazine yet. Please wait a few seconds and try again.");
         }
 
         // Clean existing calendar for this magazine if regenerating
