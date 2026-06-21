@@ -11,8 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.bind.support.WebExchangeBindException;
-import org.springframework.web.server.ServerWebExchange;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -20,15 +19,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ErrorResponse> handleApplicationException(
             ApplicationException exception,
-            ServerWebExchange exchange
+            HttpServletRequest request
     ) {
-        return buildResponse(exception.getStatus(), exception.getErrorCode(), exception.getMessage(), exchange, Map.of());
+        return buildResponse(exception.getStatus(), exception.getErrorCode(), exception.getMessage(), request, Map.of());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
             MethodArgumentNotValidException exception,
-            ServerWebExchange exchange
+            HttpServletRequest request
     ) {
         Map<String, String> details = new LinkedHashMap<>();
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
@@ -38,25 +37,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.VALIDATION_FAILED,
                 "Request validation failed",
-                exchange,
-                details
-        );
-    }
-
-    @ExceptionHandler(WebExchangeBindException.class)
-    public ResponseEntity<ErrorResponse> handleWebExchangeBind(
-            WebExchangeBindException exception,
-            ServerWebExchange exchange
-    ) {
-        Map<String, String> details = new LinkedHashMap<>();
-        for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
-            details.put(fieldError.getField(), fieldError.getDefaultMessage());
-        }
-        return buildResponse(
-                HttpStatus.BAD_REQUEST,
-                ErrorCode.VALIDATION_FAILED,
-                "Request validation failed",
-                exchange,
+                request,
                 details
         );
     }
@@ -64,7 +45,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(
             ConstraintViolationException exception,
-            ServerWebExchange exchange
+            HttpServletRequest request
     ) {
         Map<String, String> details = new LinkedHashMap<>();
         exception.getConstraintViolations().forEach(violation ->
@@ -74,7 +55,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.VALIDATION_FAILED,
                 "Constraint validation failed",
-                exchange,
+                request,
                 details
         );
     }
@@ -82,24 +63,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
             DataIntegrityViolationException exception,
-            ServerWebExchange exchange
+            HttpServletRequest request
     ) {
         return buildResponse(
                 HttpStatus.CONFLICT,
                 ErrorCode.CONFLICT,
                 "Request conflicts with existing data",
-                exchange,
+                request,
                 Map.of()
         );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception, ServerWebExchange exchange) {
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception, HttpServletRequest request) {
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCode.INTERNAL_ERROR,
                 "Unexpected server error",
-                exchange,
+                request,
                 Map.of()
         );
     }
@@ -108,7 +89,7 @@ public class GlobalExceptionHandler {
             HttpStatus status,
             ErrorCode code,
             String message,
-            ServerWebExchange exchange,
+            HttpServletRequest request,
             Map<String, String> details
     ) {
         ErrorResponse response = new ErrorResponse(
@@ -117,7 +98,7 @@ public class GlobalExceptionHandler {
                 status.getReasonPhrase(),
                 code,
                 message,
-                exchange.getRequest().getPath().value(),
+                request.getRequestURI(),
                 details
         );
         return ResponseEntity.status(status).body(response);
