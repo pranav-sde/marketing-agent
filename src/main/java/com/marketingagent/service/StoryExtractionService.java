@@ -95,7 +95,19 @@ public class StoryExtractionService {
     }
 
     private String extractTextFromPdf(String filePath) throws Exception {
-        try (PDDocument document = org.apache.pdfbox.Loader.loadPDF(new File(filePath))) {
+        File pdfFile;
+        if (filePath.startsWith("http")) {
+            pdfFile = File.createTempFile("extract-", ".pdf");
+            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+            byte[] bytes = restTemplate.getForObject(filePath, byte[].class);
+            if (bytes != null) {
+                java.nio.file.Files.write(pdfFile.toPath(), bytes);
+            }
+        } else {
+            pdfFile = new File(filePath);
+        }
+
+        try (PDDocument document = org.apache.pdfbox.Loader.loadPDF(pdfFile)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
         }

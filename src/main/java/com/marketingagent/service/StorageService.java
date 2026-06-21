@@ -95,4 +95,30 @@ public class StorageService {
             throw new RuntimeException("Failed to store media file", e);
         }
     }
+
+    public boolean fileExists(String key) {
+        if (isS3Enabled) {
+            try {
+                software.amazon.awssdk.services.s3.model.HeadObjectRequest headObjectRequest = software.amazon.awssdk.services.s3.model.HeadObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .build();
+                s3Client.headObject(headObjectRequest);
+                return true;
+            } catch (software.amazon.awssdk.services.s3.model.NoSuchKeyException e) {
+                return false;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        Path targetFile = Paths.get(uploadDir, "s3-mock", key);
+        return Files.exists(targetFile);
+    }
+
+    public String getFileUrl(String key) {
+        if (isS3Enabled) {
+            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
+        }
+        return "http://localhost:8080/uploads/s3-mock/" + key;
+    }
 }

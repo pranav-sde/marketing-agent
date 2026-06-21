@@ -91,7 +91,7 @@ public class ContentGenerationService {
         String platformName = platform.name().toLowerCase();
         String ctaLink = "https://campaign.sailortoday.in/campaign?utmMedium=" + platformName;
 
-        String systemPrompt = "You are an expert social media copywriter. You write engaging, highly converting short posts.";
+        String systemPrompt = "You are an expert social media copywriter. You write engaging, highly converting short posts. You MUST rely ONLY on the provided context.";
         String userPrompt;
         if (entry.getDayNumber() == 1) {
             userPrompt = String.format("""
@@ -103,7 +103,8 @@ public class ContentGenerationService {
                     2. Include 2-3 relevant emojis (like 📖, 🚀).
                     3. End with the exact Call to Action: "Subscribe: %s"
                     4. Include 2-3 hashtags (including #NewIssue).
-                    5. Return ONLY the final message text, no explanations, no markdown blocks.
+                    5. STRICT RULE: DO NOT invent, hallucinate, or add any information that is not explicitly present.
+                    6. Return ONLY the final message text, no explanations, no markdown blocks.
                     """,
                     platform.name(),
                     entry.getMagazine().getTitle(),
@@ -122,7 +123,8 @@ public class ContentGenerationService {
                     2. Include 2-3 relevant emojis.
                     3. End with the exact Call to Action: "Subscribe: %s"
                     4. Include 2-3 hashtags.
-                    5. Return ONLY the final message text, no explanations, no markdown blocks.
+                    5. STRICT RULE: DO NOT invent, hallucinate, or add any outside information! You must strictly use ONLY the facts provided in the Story Title and Summary above.
+                    6. Return ONLY the final message text, no explanations, no markdown blocks.
                     """,
                     platform.name(),
                     entry.getStory().getTitle(),

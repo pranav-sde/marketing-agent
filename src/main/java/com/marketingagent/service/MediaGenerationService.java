@@ -40,7 +40,14 @@ public class MediaGenerationService {
             return getStockFallbackUrl("shipping,marine");
         }
 
-        File pdfFile = new File(filePath);
+        File pdfFile;
+        try {
+            pdfFile = getLocalFile(filePath);
+        } catch (Exception e) {
+            LOGGER.error("Failed to download or read magazine PDF at {}. Using stock cover fallback.", filePath, e);
+            return getStockFallbackUrl("shipping,marine");
+        }
+
         if (!pdfFile.exists()) {
             LOGGER.warn("Magazine PDF file not found at path: {}. Using stock cover fallback.", filePath);
             return getStockFallbackUrl("shipping,marine");
@@ -78,9 +85,9 @@ public class MediaGenerationService {
         if (magazine != null) {
             String filePath = magazine.getFilePath();
             if (filePath != null && !filePath.isBlank()) {
-                File magFile = new File(filePath);
-                if (magFile.exists()) {
-                    try {
+                try {
+                    File magFile = getLocalFile(filePath);
+                    if (magFile.exists()) {
                         String mimeType = magazine.getMimeType();
                         if (mimeType != null && mimeType.toLowerCase().contains("pdf")) {
                             return generateMediaFromPdf(entry, magFile);
@@ -89,17 +96,29 @@ public class MediaGenerationService {
                         } else if (filePath.toLowerCase().endsWith(".pdf")) {
                             return generateMediaFromPdf(entry, magFile);
                         } else if (filePath.toLowerCase().matches(".*\\.(jpg|jpeg|png)$")) {
-                            return generateMediaFromImage(magFile);
+                            return generateMediaFromImage(entry, magFile);
                         }
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to generate media from magazine file. Using fallback.", e);
                     }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to generate media from magazine file. Using fallback.", e);
                 }
             }
         }
 
         // Fallback to loremflickr if magazine file is not usable
         return generateStockImage(entry);
+    }
+
+    private File getLocalFile(String path) throws Exception {
+        if (path.startsWith("http")) {
+            File tempFile = File.createTempFile("mag-dl-", path.toLowerCase().endsWith(".pdf") ? ".pdf" : ".tmp");
+            byte[] bytes = restTemplate.getForObject(path, byte[].class);
+            if (bytes != null) {
+                java.nio.file.Files.write(tempFile.toPath(), bytes);
+            }
+            return tempFile;
+        }
+        return new File(path);
     }
 
     private String generateMediaFromPdf(ContentCalendar entry, File pdfFile) throws Exception {
@@ -111,6 +130,13 @@ public class MediaGenerationService {
 
             // Pick a page based on day number to provide some variety
             int pageIndex = entry.getDayNumber() % totalPages;
+
+            String key = "magazines/" + entry.getMagazine().getId() + "/pages/page-" + pageIndex + ".png";
+
+            if (storageService.fileExists(key)) {
+                LOGGER.info("PDF page {} already rendered for magazine {}. Reusing existing S3 image.", pageIndex, entry.getMagazine().getId());
+                return storageService.getFileUrl(key);
+            }
 
             LOGGER.info("Rendering PDF page {} for content calendar day {}", pageIndex, entry.getDayNumber());
             PDFRenderer pdfRenderer = new PDFRenderer(document);
@@ -124,19 +150,25 @@ public class MediaGenerationService {
             bim.flush();
             bim = null;
 
-            String key = "media-pdf-page-" + entry.getDayNumber() + "-" + UUID.randomUUID() + ".png";
             return storageService.uploadFile(key, imageBytes, "image/png");
         }
     }
 
-    private String generateMediaFromImage(File imageFile) throws Exception {
-        LOGGER.info("Using uploaded image file directly for content media");
-        byte[] imageBytes = java.nio.file.Files.readAllBytes(imageFile.toPath());
+    private String generateMediaFromImage(ContentCalendar entry, File imageFile) throws Exception {
         String extension = "jpg";
         if (imageFile.getName().toLowerCase().endsWith(".png")) {
             extension = "png";
         }
-        String key = "media-mag-image-" + UUID.randomUUID() + "." + extension;
+        
+        String key = "magazines/" + entry.getMagazine().getId() + "/cover." + extension;
+        
+        if (storageService.fileExists(key)) {
+            LOGGER.info("Image already uploaded for magazine {}. Reusing existing S3 image.", entry.getMagazine().getId());
+            return storageService.getFileUrl(key);
+        }
+
+        LOGGER.info("Using uploaded image file directly for content media");
+        byte[] imageBytes = java.nio.file.Files.readAllBytes(imageFile.toPath());
         String contentType = extension.equals("png") ? "image/png" : "image/jpeg";
         return storageService.uploadFile(key, imageBytes, contentType);
     }

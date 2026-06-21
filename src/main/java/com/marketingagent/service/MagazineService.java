@@ -63,15 +63,16 @@ public class MagazineService {
 
             // Upload to S3
             String s3Key = "magazines/" + tenantId.toString() + "/" + fileName;
+            String fileUrl = targetLocation.toAbsolutePath().toString(); // Fallback to local
             try {
-                storageService.uploadFile(s3Key, Files.readAllBytes(targetLocation), file.getContentType());
+                fileUrl = storageService.uploadFile(s3Key, Files.readAllBytes(targetLocation), file.getContentType());
                 LOGGER.info("Magazine PDF uploaded to S3 at key: {}", s3Key);
             } catch (Exception e) {
                 LOGGER.error("Failed to upload magazine PDF to S3: {}", s3Key, e);
             }
 
-            // Create Magazine record
-            Magazine magazine = new Magazine(tenant, file.getOriginalFilename(), targetLocation.toAbsolutePath().toString());
+            // Create Magazine record with the S3 URL (or local if S3 failed)
+            Magazine magazine = new Magazine(tenant, file.getOriginalFilename(), fileUrl);
             magazine.setFileSize(file.getSize());
             magazine.setMimeType(file.getContentType());
             magazine = magazineRepository.save(magazine);
