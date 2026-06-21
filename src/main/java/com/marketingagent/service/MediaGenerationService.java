@@ -92,7 +92,7 @@ public class MediaGenerationService {
                         if (mimeType != null && mimeType.toLowerCase().contains("pdf")) {
                             return generateMediaFromPdf(entry, magFile);
                         } else if (mimeType != null && mimeType.toLowerCase().contains("image")) {
-                            return generateMediaFromImage(magFile);
+                            return generateMediaFromImage(entry, magFile);
                         } else if (filePath.toLowerCase().endsWith(".pdf")) {
                             return generateMediaFromPdf(entry, magFile);
                         } else if (filePath.toLowerCase().matches(".*\\.(jpg|jpeg|png)$")) {
@@ -121,6 +121,53 @@ public class MediaGenerationService {
         return new File(path);
     }
 
+    private final java.util.Map<UUID, List<Integer>> bestPagesCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private List<Integer> getBestImagePages(PDDocument document, UUID magazineId) throws java.io.IOException {
+        if (bestPagesCache.containsKey(magazineId)) {
+            return bestPagesCache.get(magazineId);
+        }
+        
+        int totalPages = document.getNumberOfPages();
+        List<PageScore> scores = new java.util.ArrayList<>();
+        
+        // Skip cover (0) and last page (totalPages - 1)
+        int startPage = 1;
+        int endPage = totalPages - 2;
+        
+        if (endPage < startPage) {
+            return List.of(0); // fallback
+        }
+        
+        org.apache.pdfbox.text.PDFTextStripper stripper = new org.apache.pdfbox.text.PDFTextStripper();
+        for (int i = startPage; i <= endPage; i++) {
+            stripper.setStartPage(i + 1); // 1-based
+            stripper.setEndPage(i + 1);
+            String text = stripper.getText(document);
+            scores.add(new PageScore(i, text != null ? text.trim().length() : 0));
+        }
+        
+        // Sort by text length ascending (less text = more likely to be an image page)
+        scores.sort((s1, s2) -> {
+            int cmp = Integer.compare(s1.textLength, s2.textLength);
+            if (cmp == 0) return Integer.compare(s1.pageIndex, s2.pageIndex);
+            return cmp;
+        });
+        
+        List<Integer> bestPages = scores.stream().map(s -> s.pageIndex).toList();
+        bestPagesCache.put(magazineId, bestPages);
+        return bestPages;
+    }
+    
+    private static class PageScore {
+        int pageIndex;
+        int textLength;
+        PageScore(int pageIndex, int textLength) {
+            this.pageIndex = pageIndex;
+            this.textLength = textLength;
+        }
+    }
+
     private String generateMediaFromPdf(ContentCalendar entry, File pdfFile) throws Exception {
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
             int totalPages = document.getNumberOfPages();
@@ -128,27 +175,31 @@ public class MediaGenerationService {
                 return generateStockImage(entry);
             }
 
-            // Pick a page based on day number to provide some variety
-            int pageIndex = entry.getDayNumber() % totalPages;
+            List<Integer> bestPages = getBestImagePages(document, entry.getMagazine().getId());
+            
+            // Post index: Day 2 -> 0, Day 3 -> 1, ..., Day 30 -> 28
+            int postIndex = entry.getDayNumber() - 2;
+            if (postIndex < 0) postIndex = 0;
+            
+            int selectedPageIndex = bestPages.get(postIndex % bestPages.size());
 
-            String key = "magazines/" + entry.getMagazine().getId() + "/pages/page-" + pageIndex + ".png";
+            String key = "magazines/" + entry.getMagazine().getId() + "/pages/page-" + selectedPageIndex + ".png";
 
             if (storageService.fileExists(key)) {
-                LOGGER.info("PDF page {} already rendered for magazine {}. Reusing existing S3 image.", pageIndex, entry.getMagazine().getId());
+                LOGGER.info("PDF page {} already rendered for magazine {}. Reusing existing S3 image.", selectedPageIndex, entry.getMagazine().getId());
                 return storageService.getFileUrl(key);
             }
 
-            LOGGER.info("Rendering PDF page {} for content calendar day {}", pageIndex, entry.getDayNumber());
+            LOGGER.info("Rendering PDF page {} for content calendar day {}", selectedPageIndex, entry.getDayNumber());
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             // Render at 72 DPI to save memory in Render's 512MB limit
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(pageIndex, 72);
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(selectedPageIndex, 72);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(bim, "png", baos);
             byte[] imageBytes = baos.toByteArray();
             
             bim.flush();
-            bim = null;
 
             return storageService.uploadFile(key, imageBytes, "image/png");
         }

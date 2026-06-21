@@ -67,6 +67,7 @@ management:
       application: ${spring.application.name}
 
 server:
+  port: ${PORT:8080}
   shutdown: graceful
 
 logging:

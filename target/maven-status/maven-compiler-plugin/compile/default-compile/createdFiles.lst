@@ -142,6 +142,7 @@ com/marketingagent/domain/message/MessageAttempt.class
 com/marketingagent/repository/DeliveryEventRepository.class
 com/marketingagent/domain/audience/AudienceSnapshotMember.class
 com/marketingagent/controller/CampaignController.class
+com/marketingagent/service/MediaGenerationService$PageScore.class
 com/marketingagent/repository/SuppressionListEntryRepository.class
 com/marketingagent/domain/magazine/ContentCalendar.class
 com/marketingagent/domain/magazine/Magazine.class
