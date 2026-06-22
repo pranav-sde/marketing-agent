@@ -88,6 +88,24 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(org.springframework.transaction.TransactionSystemException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionSystemException(
+            org.springframework.transaction.TransactionSystemException exception,
+            HttpServletRequest request
+    ) {
+        Throwable cause = exception.getRootCause();
+        if (cause instanceof org.springframework.dao.DataIntegrityViolationException || cause instanceof jakarta.validation.ConstraintViolationException) {
+            return buildResponse(
+                    HttpStatus.CONFLICT,
+                    ErrorCode.CONFLICT,
+                    "Request conflicts with existing data (Constraint Violation)",
+                    request,
+                    Map.of()
+            );
+        }
+        return handleUnexpected(exception, request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception, HttpServletRequest request) {
         org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class).error("Unexpected server error", exception);

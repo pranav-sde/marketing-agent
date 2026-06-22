@@ -34,6 +34,8 @@ public class MagazineService {
     private final StorageService storageService;
     private final com.marketingagent.repository.StoryRepository storyRepository;
     private final com.marketingagent.repository.ContentCalendarRepository contentCalendarRepository;
+    private final com.marketingagent.repository.GeneratedContentRepository generatedContentRepository;
+    private final com.marketingagent.repository.ContentOutboundMessageRepository contentOutboundMessageRepository;
     private final String uploadDir;
 
     public MagazineService(
@@ -43,6 +45,8 @@ public class MagazineService {
             StorageService storageService,
             com.marketingagent.repository.StoryRepository storyRepository,
             com.marketingagent.repository.ContentCalendarRepository contentCalendarRepository,
+            com.marketingagent.repository.GeneratedContentRepository generatedContentRepository,
+            com.marketingagent.repository.ContentOutboundMessageRepository contentOutboundMessageRepository,
             @Value("${marketing-agent.storage.upload-dir:./uploads}") String uploadDir) {
         this.tenantService = tenantService;
         this.magazineRepository = magazineRepository;
@@ -50,6 +54,8 @@ public class MagazineService {
         this.storageService = storageService;
         this.storyRepository = storyRepository;
         this.contentCalendarRepository = contentCalendarRepository;
+        this.generatedContentRepository = generatedContentRepository;
+        this.contentOutboundMessageRepository = contentOutboundMessageRepository;
         this.uploadDir = uploadDir;
     }
 
@@ -71,6 +77,8 @@ public class MagazineService {
             }
         }
         
+        contentOutboundMessageRepository.deleteByCalendarEntry_Magazine_Id(magazineId);
+        generatedContentRepository.deleteByCalendarEntry_Magazine_Id(magazineId);
         contentCalendarRepository.deleteByMagazine_Id(magazineId);
         storyRepository.deleteByMagazine_Id(magazineId);
         magazineRepository.delete(magazine);

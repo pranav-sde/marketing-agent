@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface GeneratedContentRepository extends JpaRepository<GeneratedContent, UUID> {
     List<GeneratedContent> findByCalendarEntry_Id(UUID calendarEntryId);
     Optional<GeneratedContent> findByCalendarEntry_IdAndPlatform(UUID calendarEntryId, ContentPlatform platform);
+    void deleteByCalendarEntry_Magazine_Id(UUID magazineId);
 }

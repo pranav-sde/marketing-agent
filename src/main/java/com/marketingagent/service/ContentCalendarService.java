@@ -67,12 +67,8 @@ public class ContentCalendarService {
         // Clean existing calendar for this magazine if regenerating
         List<ContentCalendar> existing = contentCalendarRepository.findByMagazine_IdOrderByDayNumberAsc(magazineId);
         if (!existing.isEmpty()) {
-            for (ContentCalendar entry : existing) {
-                List<GeneratedContent> generated = generatedContentRepository.findByCalendarEntry_Id(entry.getId());
-                if (!generated.isEmpty()) {
-                    generatedContentRepository.deleteAll(generated);
-                }
-            }
+            contentOutboundMessageRepository.deleteByCalendarEntry_Magazine_Id(magazineId);
+            generatedContentRepository.deleteByCalendarEntry_Magazine_Id(magazineId);
             contentCalendarRepository.deleteAll(existing);
             contentCalendarRepository.flush();
         }

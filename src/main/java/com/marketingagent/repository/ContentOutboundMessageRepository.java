@@ -23,4 +23,6 @@ public interface ContentOutboundMessageRepository extends JpaRepository<ContentO
 
     @Query("SELECT status, COUNT(id) FROM ContentOutboundMessage WHERE adHocCampaign.id = :adHocCampaignId GROUP BY status")
     List<Object[]> countStatusByAdHocCampaignId(UUID adHocCampaignId);
+
+    void deleteByCalendarEntry_Magazine_Id(UUID magazineId);
 }
