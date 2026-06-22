@@ -130,10 +130,7 @@ public class MediaGenerationService {
     private File getLocalFile(String path) throws Exception {
         if (path.startsWith("http")) {
             File tempFile = File.createTempFile("mag-dl-", path.toLowerCase().endsWith(".pdf") ? ".pdf" : ".tmp");
-            restTemplate.execute(path, org.springframework.http.HttpMethod.GET, null, clientHttpResponse -> {
-                java.nio.file.Files.copy(clientHttpResponse.getBody(), tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                return null;
-            });
+            storageService.downloadFile(path, tempFile.toPath());
             return tempFile;
         }
         return new File(path);

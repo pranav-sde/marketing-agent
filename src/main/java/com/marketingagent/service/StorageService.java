@@ -83,8 +83,9 @@ public class StorageService {
         // Fallback to local storage (mock S3)
         try {
             Path targetDir = Paths.get(uploadDir, "s3-mock");
-            Files.createDirectories(targetDir);
             Path targetFile = targetDir.resolve(key);
+            // Create parent directories if nested keys are used
+            Files.createDirectories(targetFile.getParent());
             Files.write(targetFile, content);
 
             // Serve file locally
@@ -145,5 +146,39 @@ public class StorageService {
             return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, encodedKey);
         }
         return "http://localhost:8080/uploads/s3-mock/" + key;
+    }
+
+    public void downloadFile(String fileUrl, Path destination) throws IOException {
+        if (fileUrl.contains(bucketName)) {
+            if (!isS3Enabled) {
+                throw new IOException("AWS S3 is not enabled or credentials are missing on this server. Cannot download S3 file: " + fileUrl);
+            }
+            try {
+                java.net.URL url = new java.net.URL(fileUrl);
+                String key = url.getPath();
+                if (key.startsWith("/")) {
+                    key = key.substring(1);
+                }
+                key = java.net.URLDecoder.decode(key, java.nio.charset.StandardCharsets.UTF_8);
+                
+                software.amazon.awssdk.services.s3.model.GetObjectRequest getObjectRequest = software.amazon.awssdk.services.s3.model.GetObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .build();
+                s3Client.getObject(getObjectRequest, software.amazon.awssdk.core.sync.ResponseTransformer.toFile(destination));
+                LOGGER.info("Successfully downloaded file from S3 using SDK: {}", key);
+                return;
+            } catch (Exception e) {
+                LOGGER.error("Failed to download file using S3 SDK: {}", fileUrl, e);
+                throw new IOException("Failed to download file from S3: " + e.getMessage(), e);
+            }
+        }
+
+        // Fallback to plain HTTP GET for non-S3 URLs (like local mock storage or external URLs)
+        org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+        restTemplate.execute(fileUrl, org.springframework.http.HttpMethod.GET, null, clientHttpResponse -> {
+            Files.copy(clientHttpResponse.getBody(), destination, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return null;
+        });
     }
 }

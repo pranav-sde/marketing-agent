@@ -30,12 +30,14 @@ public class StoryExtractionService {
     private final StoryRepository storyRepository;
     private final GroqClient groqClient;
     private final ObjectMapper objectMapper;
+    private final StorageService storageService;
 
-    public StoryExtractionService(MagazineRepository magazineRepository, StoryRepository storyRepository, GroqClient groqClient, ObjectMapper objectMapper) {
+    public StoryExtractionService(MagazineRepository magazineRepository, StoryRepository storyRepository, GroqClient groqClient, ObjectMapper objectMapper, StorageService storageService) {
         this.magazineRepository = magazineRepository;
         this.storyRepository = storyRepository;
         this.groqClient = groqClient;
         this.objectMapper = objectMapper;
+        this.storageService = storageService;
     }
 
     @Async
@@ -102,11 +104,7 @@ public class StoryExtractionService {
                 File tempFile = File.createTempFile("extract-", ".pdf");
                 pdfFile = tempFile;
                 isTempFile = true;
-                org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
-                restTemplate.execute(filePath, org.springframework.http.HttpMethod.GET, null, clientHttpResponse -> {
-                    java.nio.file.Files.copy(clientHttpResponse.getBody(), tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    return null;
-                });
+                storageService.downloadFile(filePath, tempFile.toPath());
             } else {
                 pdfFile = new File(filePath);
             }
