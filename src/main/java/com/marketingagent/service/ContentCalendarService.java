@@ -61,7 +61,13 @@ public class ContentCalendarService {
         List<Story> stories = storyRepository.findByMagazine_Id(magazineId);
 
         if (stories.isEmpty()) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "No stories extracted from this magazine yet. Please wait a few seconds and try again.");
+            if (magazine.getProcessingStatus() == com.marketingagent.domain.magazine.MagazineStatus.EXTRACTING) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Magazine is still being processed by AI. Please wait 10-20 seconds and try again.");
+            } else if (magazine.getProcessingStatus() == com.marketingagent.domain.magazine.MagazineStatus.FAILED) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Story extraction failed: " + magazine.getErrorMessage());
+            } else {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "No text/stories could be extracted from this PDF. Ensure it is not an image-only scanned PDF.");
+            }
         }
 
         // Clean existing calendar for this magazine if regenerating
