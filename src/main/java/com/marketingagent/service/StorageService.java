@@ -71,7 +71,8 @@ public class StorageService {
                         .contentType(contentType)
                         .build();
                 s3Client.putObject(putObjectRequest, RequestBody.fromBytes(content));
-                String s3Url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
+                String encodedKey = java.net.URLEncoder.encode(key, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20").replace("%2F", "/");
+                String s3Url = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, encodedKey);
                 LOGGER.info("Successfully uploaded file to AWS S3: {}", s3Url);
                 return s3Url;
             } catch (Exception e) {
@@ -140,7 +141,8 @@ public class StorageService {
 
     public String getFileUrl(String key) {
         if (isS3Enabled) {
-            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, key);
+            String encodedKey = java.net.URLEncoder.encode(key, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20").replace("%2F", "/");
+            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, encodedKey);
         }
         return "http://localhost:8080/uploads/s3-mock/" + key;
     }
