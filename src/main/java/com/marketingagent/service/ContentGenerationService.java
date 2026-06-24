@@ -165,7 +165,7 @@ public class ContentGenerationService {
     }
 
     public String generate30DayContentPlan(String magazineTitle, String rawText) {
-        String textForPrompt = rawText.length() > 50000 ? rawText.substring(0, 50000) : rawText;
+        String textForPrompt = rawText.length() > 25000 ? rawText.substring(0, 25000) : rawText;
 
         String systemPrompt = "You are an expert social media copywriter and marketing planner. You must rely ONLY on the provided context.";
         String userPrompt = String.format("""
@@ -175,11 +175,11 @@ public class ContentGenerationService {
                 You MUST return ONLY a JSON array of exactly 30 entries. Do not wrap in markdown or add explanations.
                 Each object in the array must have the following fields:
                 - "dayNumber": Integer (from 1 to 30)
-                - "storyTitle": String (title of the magazine story this day is based on)
-                - "summary": String (brief summary of that story)
-                - "keywords": Array of strings (keywords for the story)
-                - "contentAngle": String (e.g. Educational, Inspirational, Promotional)
-                - "postText": String (engaging marketing post copy for WhatsApp, strictly between 150-200 characters, including 2-3 emojis, 2-3 hashtags, and concluding with: "Subscribe: https://campaign.sailortoday.in/campaign?utmMedium=whatsapp")
+                - "storyTitle": String (short title)
+                - "summary": String (very short 1-sentence summary)
+                - "keywords": Array of strings (1-2 keywords)
+                - "contentAngle": String (e.g. Educational, Promotional)
+                - "postText": String (short WhatsApp copy, under 100 characters, 1 emoji, 1 hashtag)
                 
                 STRICT RULES:
                 1. Do NOT hallucinate. Use ONLY facts from the provided text.

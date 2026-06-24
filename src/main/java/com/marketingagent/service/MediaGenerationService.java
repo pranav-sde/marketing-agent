@@ -31,127 +31,82 @@ public class MediaGenerationService {
     }
 
     /**
-     * Renders page 0 of the magazine PDF as a PNG cover and uploads it to storage.
+     * Preload all media required for a magazine (Cover + 30 thumbnails).
+     * This is called during the initial extraction pipeline while the local PDF file still exists.
      */
-    public String generateMagazineCover(Magazine magazine) {
-        String filePath = magazine.getFilePath();
-        if (filePath == null || filePath.isBlank()) {
-            LOGGER.warn("No magazine file path found. Using stock cover fallback.");
-            return getStockFallbackUrl("shipping,marine");
+    public void preloadMagazineMedia(Magazine magazine, File localFile) {
+        if (localFile == null || !localFile.exists()) {
+            LOGGER.warn("Local file missing. Cannot preload media for magazine: {}", magazine.getId());
+            return;
         }
 
-        File pdfFile = null;
-        boolean isTempFile = false;
         try {
-            if (filePath.startsWith("http")) {
-                isTempFile = true;
+            if (localFile.getName().toLowerCase().endsWith(".pdf") || 
+               (magazine.getMimeType() != null && magazine.getMimeType().toLowerCase().contains("pdf"))) {
+                preloadFromPdf(magazine, localFile);
+            } else {
+                preloadFromImage(magazine, localFile);
             }
-            pdfFile = getLocalFile(filePath);
         } catch (Exception e) {
-            LOGGER.error("Failed to download or read magazine PDF at {}. Using stock cover fallback.", filePath, e);
-            return getStockFallbackUrl("shipping,marine");
+            LOGGER.error("Failed to preload media for magazine: {}", magazine.getId(), e);
         }
+    }
 
-        try {
-            if (!pdfFile.exists()) {
-                LOGGER.warn("Magazine PDF file not found at path: {}. Using stock cover fallback.", filePath);
-                return getStockFallbackUrl("shipping,marine");
-            }
+    private void preloadFromPdf(Magazine magazine, File pdfFile) throws Exception {
+        try (PDDocument document = Loader.loadPDF(pdfFile)) {
+            int totalPages = document.getNumberOfPages();
+            if (totalPages == 0) return;
 
-            try (PDDocument document = Loader.loadPDF(pdfFile)) {
-                if (document.getNumberOfPages() == 0) {
-                    LOGGER.warn("Magazine PDF is empty. Using stock cover fallback.");
-                    return getStockFallbackUrl("shipping,marine");
-                }
+            PDFRenderer pdfRenderer = new PDFRenderer(document);
 
-                LOGGER.info("Rendering PDF cover page for magazine: {}", magazine.getTitle());
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
-                // Render first page (0) at 72 DPI to save memory
-                BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 72);
+            // 1. Generate Cover (Page 0)
+            LOGGER.info("Preloading cover image for magazine: {}", magazine.getId());
+            BufferedImage coverBim = pdfRenderer.renderImageWithDPI(0, 72);
+            ByteArrayOutputStream coverBaos = new ByteArrayOutputStream();
+            ImageIO.write(coverBim, "png", coverBaos);
+            storageService.uploadFile("magazine-cover-" + magazine.getId() + ".png", coverBaos.toByteArray(), "image/png");
+            coverBim.flush();
+
+            // 2. Generate 30 thumbnails based on the best image pages
+            List<Integer> bestPages = getBestImagePages(document);
+            if (bestPages.isEmpty()) bestPages.add(0);
+
+            for (int day = 1; day <= 30; day++) {
+                int selectedPageIndex = bestPages.get((day - 1) % bestPages.size());
+                String key = "magazines/" + magazine.getId() + "/thumbnails/thumb-" + day + ".png";
+
+                LOGGER.info("Preloading PDF page {} for content calendar day {}", selectedPageIndex, day);
+                BufferedImage bim = pdfRenderer.renderImageWithDPI(selectedPageIndex, 72);
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(bim, "png", baos);
-                byte[] imageBytes = baos.toByteArray();
-                
+                storageService.uploadFile(key, baos.toByteArray(), "image/png");
                 bim.flush();
-
-                String key = "magazine-cover-" + magazine.getId() + ".png";
-                return storageService.uploadFile(key, imageBytes, "image/png");
-
-            } catch (Exception e) {
-                LOGGER.error("Failed to render magazine PDF cover. Falling back to stock cover.", e);
-                return getStockFallbackUrl("shipping,marine");
             }
-        } finally {
-            if (isTempFile && pdfFile != null && pdfFile.exists()) {
-                pdfFile.delete();
-            }
+            LOGGER.info("Successfully preloaded all media for magazine: {}", magazine.getId());
         }
     }
 
-    public String generateContentMedia(ContentCalendar entry) {
-        Magazine magazine = entry.getMagazine();
-        if (magazine != null) {
-            String filePath = magazine.getFilePath();
-            if (filePath != null && !filePath.isBlank()) {
-                File magFile = null;
-                boolean isTempFile = false;
-                try {
-                    if (filePath.startsWith("http")) {
-                        isTempFile = true;
-                    }
-                    magFile = getLocalFile(filePath);
-                    if (magFile.exists()) {
-                        String mimeType = magazine.getMimeType();
-                        if (mimeType != null && mimeType.toLowerCase().contains("pdf")) {
-                            return generateMediaFromPdf(entry, magFile);
-                        } else if (mimeType != null && mimeType.toLowerCase().contains("image")) {
-                            return generateMediaFromImage(entry, magFile);
-                        } else if (filePath.toLowerCase().endsWith(".pdf")) {
-                            return generateMediaFromPdf(entry, magFile);
-                        } else if (filePath.toLowerCase().matches(".*\\.(jpg|jpeg|png)$")) {
-                            return generateMediaFromImage(entry, magFile);
-                        }
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Failed to generate media from magazine file. Using fallback.", e);
-                } finally {
-                    if (isTempFile && magFile != null && magFile.exists()) {
-                        magFile.delete();
-                    }
-                }
-            }
-        }
-
-        // Fallback to loremflickr if magazine file is not usable
-        return generateStockImage(entry);
-    }
-
-    private File getLocalFile(String path) throws Exception {
-        if (path.startsWith("http")) {
-            File tempFile = File.createTempFile("mag-dl-", path.toLowerCase().endsWith(".pdf") ? ".pdf" : ".tmp");
-            storageService.downloadFile(path, tempFile.toPath());
-            return tempFile;
-        }
-        return new File(path);
-    }
-
-    private final java.util.Map<UUID, List<Integer>> bestPagesCache = new java.util.concurrent.ConcurrentHashMap<>();
-
-    private List<Integer> getBestImagePages(PDDocument document, UUID magazineId) throws java.io.IOException {
-        if (bestPagesCache.containsKey(magazineId)) {
-            return bestPagesCache.get(magazineId);
-        }
+    private void preloadFromImage(Magazine magazine, File imageFile) throws Exception {
+        byte[] imageBytes = java.nio.file.Files.readAllBytes(imageFile.toPath());
         
+        // Cover
+        storageService.uploadFile("magazine-cover-" + magazine.getId() + ".png", imageBytes, "image/png");
+
+        // Thumbnails
+        for (int day = 1; day <= 30; day++) {
+            String key = "magazines/" + magazine.getId() + "/thumbnails/thumb-" + day + ".png";
+            storageService.uploadFile(key, imageBytes, "image/png");
+        }
+    }
+
+    private List<Integer> getBestImagePages(PDDocument document) throws java.io.IOException {
         int totalPages = document.getNumberOfPages();
         List<PageScore> scores = new java.util.ArrayList<>();
-        
-        // Skip cover (0) and last page (totalPages - 1)
         int startPage = 1;
         int endPage = totalPages - 2;
-        
         if (endPage < startPage) {
-            return List.of(0); // fallback
+            return new java.util.ArrayList<>(List.of(0));
         }
         
         org.apache.pdfbox.text.PDFTextStripper stripper = new org.apache.pdfbox.text.PDFTextStripper();
@@ -162,18 +117,15 @@ public class MediaGenerationService {
             scores.add(new PageScore(i, text != null ? text.trim().length() : 0));
         }
         
-        // Sort by text length ascending (less text = more likely to be an image page)
         scores.sort((s1, s2) -> {
             int cmp = Integer.compare(s1.textLength, s2.textLength);
             if (cmp == 0) return Integer.compare(s1.pageIndex, s2.pageIndex);
             return cmp;
         });
         
-        List<Integer> bestPages = scores.stream().map(s -> s.pageIndex).toList();
-        bestPagesCache.put(magazineId, bestPages);
-        return bestPages;
+        return scores.stream().map(s -> s.pageIndex).toList();
     }
-    
+
     private static class PageScore {
         int pageIndex;
         int textLength;
@@ -183,60 +135,17 @@ public class MediaGenerationService {
         }
     }
 
-    private String generateMediaFromPdf(ContentCalendar entry, File pdfFile) throws Exception {
-        try (PDDocument document = Loader.loadPDF(pdfFile)) {
-            int totalPages = document.getNumberOfPages();
-            if (totalPages == 0) {
-                return generateStockImage(entry);
-            }
-
-            List<Integer> bestPages = getBestImagePages(document, entry.getMagazine().getId());
-            
-            // Post index: Day 2 -> 0, Day 3 -> 1, ..., Day 30 -> 28
-            int postIndex = entry.getDayNumber() - 2;
-            if (postIndex < 0) postIndex = 0;
-            
-            int selectedPageIndex = bestPages.get(postIndex % bestPages.size());
-
-            String key = "magazines/" + entry.getMagazine().getId() + "/pages/page-" + selectedPageIndex + ".png";
-
-            if (storageService.fileExists(key)) {
-                LOGGER.info("PDF page {} already rendered for magazine {}. Reusing existing S3 image.", selectedPageIndex, entry.getMagazine().getId());
-                return storageService.getFileUrl(key);
-            }
-
-            LOGGER.info("Rendering PDF page {} for content calendar day {}", selectedPageIndex, entry.getDayNumber());
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            // Render at 72 DPI to save memory in Render's 512MB limit
-            BufferedImage bim = pdfRenderer.renderImageWithDPI(selectedPageIndex, 72);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(bim, "png", baos);
-            byte[] imageBytes = baos.toByteArray();
-            
-            bim.flush();
-
-            return storageService.uploadFile(key, imageBytes, "image/png");
-        }
+    public String generateMagazineCover(Magazine magazine) {
+        String key = "magazine-cover-" + magazine.getId() + ".png";
+        return storageService.getFileUrl(key);
     }
 
-    private String generateMediaFromImage(ContentCalendar entry, File imageFile) throws Exception {
-        String extension = "jpg";
-        if (imageFile.getName().toLowerCase().endsWith(".png")) {
-            extension = "png";
-        }
-        
-        String key = "magazines/" + entry.getMagazine().getId() + "/cover." + extension;
-        
-        if (storageService.fileExists(key)) {
-            LOGGER.info("Image already uploaded for magazine {}. Reusing existing S3 image.", entry.getMagazine().getId());
+    public String generateContentMedia(ContentCalendar entry) {
+        if (entry.getMagazine() != null) {
+            String key = "magazines/" + entry.getMagazine().getId() + "/thumbnails/thumb-" + entry.getDayNumber() + ".png";
             return storageService.getFileUrl(key);
         }
-
-        LOGGER.info("Using uploaded image file directly for content media");
-        byte[] imageBytes = java.nio.file.Files.readAllBytes(imageFile.toPath());
-        String contentType = extension.equals("png") ? "image/png" : "image/jpeg";
-        return storageService.uploadFile(key, imageBytes, contentType);
+        return generateStockImage(entry);
     }
 
     private String generateStockImage(ContentCalendar entry) {
@@ -266,7 +175,6 @@ public class MediaGenerationService {
     }
 
     private String getStockFallbackUrl(String query) {
-        // Direct loremflickr fallback url (if download fails, we just return the direct link)
         return "https://loremflickr.com/800/600/" + query;
     }
 }

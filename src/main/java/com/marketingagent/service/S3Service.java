@@ -78,21 +78,31 @@ public class S3Service {
      * Checks if content length > 0 and if content type matches PDF.
      */
     public void validateS3Object(String fileUrl) {
-        String key = extractKey(fileUrl);
         LOGGER.info("Validating storage object metadata for key/URL: {}", fileUrl);
 
-        if (isS3Enabled) {
+        if (fileUrl != null && fileUrl.startsWith("http") && !isLocalUrl(fileUrl)) {
             try {
-                HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .build();
-                HeadObjectResponse headObjectResponse = s3Client.headObject(headObjectRequest);
+                java.net.URL url = new java.net.URL(fileUrl);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("HEAD");
+                int responseCode = conn.getResponseCode();
 
-                long contentLength = headObjectResponse.contentLength();
-                String contentType = headObjectResponse.contentType();
+                // If HEAD is not allowed, fallback to GET (common for some presigned S3 URLs)
+                if (responseCode == 403 || responseCode == 405) {
+                    conn = (java.net.HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    responseCode = conn.getResponseCode();
+                }
 
-                LOGGER.info("S3 Object Metadata - Key: {}, Size: {} bytes, Type: {}", key, contentLength, contentType);
+                if (responseCode < 200 || responseCode >= 300) {
+                    throw new PdfProcessingException("S3 read failure: HTTP validation returned status code " + responseCode);
+                }
+
+                long contentLength = conn.getContentLengthLong();
+                String contentType = conn.getContentType();
+                conn.disconnect();
+
+                LOGGER.info("HTTP URL Metadata - Size: {} bytes, Type: {}", contentLength, contentType);
 
                 if (contentLength <= 0) {
                     throw new PdfProcessingException("Invalid PDF: File size is 0 or empty.");
@@ -101,45 +111,74 @@ public class S3Service {
                 if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
                     throw new PdfProcessingException("Invalid file type: Expected application/pdf but got " + contentType);
                 }
-            } catch (NoSuchKeyException e) {
-                LOGGER.error("S3 object does not exist for key: {}", key, e);
-                throw new PdfProcessingException("S3 file read failure: File does not exist for key " + key, e);
-            } catch (S3Exception e) {
-                LOGGER.error("S3 metadata validation failed for key: {}", key, e);
-                throw new PdfProcessingException("S3 read failure: Unable to fetch metadata for key " + key, e);
+            } catch (PdfProcessingException e) {
+                throw e;
+            } catch (Exception e) {
+                LOGGER.error("Failed to validate HTTP S3 URL: {}", fileUrl, e);
+                throw new PdfProcessingException("S3 read failure: Unable to fetch metadata for URL: " + fileUrl, e);
             }
         } else {
-            // Local fallback validation
-            Path localPath = Paths.get(uploadDir, "s3-mock", key);
-            if (!Files.exists(localPath)) {
-                // If it is a full local absolute path, try checking that directly
-                localPath = Paths.get(key);
-            }
+            String key = extractKey(fileUrl);
+            if (isS3Enabled && !isLocalUrl(fileUrl)) {
+                try {
+                    HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .build();
+                    HeadObjectResponse headObjectResponse = s3Client.headObject(headObjectRequest);
 
-            if (!Files.exists(localPath)) {
-                throw new PdfProcessingException("Local file read failure: File does not exist at " + localPath);
-            }
+                    long contentLength = headObjectResponse.contentLength();
+                    String contentType = headObjectResponse.contentType();
 
-            try {
-                long size = Files.size(localPath);
-                String contentType = Files.probeContentType(localPath);
-                
-                // Fallback content type detection if probeContentType returns null
-                if (contentType == null && localPath.getFileName().toString().toLowerCase().endsWith(".pdf")) {
-                    contentType = "application/pdf";
+                    LOGGER.info("S3 Object Metadata - Key: {}, Size: {} bytes, Type: {}", key, contentLength, contentType);
+
+                    if (contentLength <= 0) {
+                        throw new PdfProcessingException("Invalid PDF: File size is 0 or empty.");
+                    }
+
+                    if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
+                        throw new PdfProcessingException("Invalid file type: Expected application/pdf but got " + contentType);
+                    }
+                } catch (NoSuchKeyException e) {
+                    LOGGER.error("S3 object does not exist for key: {}", key, e);
+                    throw new PdfProcessingException("S3 file read failure: File does not exist for key " + key, e);
+                } catch (S3Exception e) {
+                    LOGGER.error("S3 metadata validation failed for key: {}", key, e);
+                    throw new PdfProcessingException("S3 read failure: Unable to fetch metadata for key " + key, e);
+                }
+            } else {
+                // Local fallback validation
+                Path localPath = Paths.get(uploadDir, "s3-mock", key);
+                if (!Files.exists(localPath)) {
+                    // If it is a full local absolute path, try checking that directly
+                    localPath = Paths.get(key);
                 }
 
-                LOGGER.info("Local Object Metadata - Path: {}, Size: {} bytes, Type: {}", localPath, size, contentType);
-
-                if (size <= 0) {
-                    throw new PdfProcessingException("Invalid PDF: File size is 0 or empty.");
+                if (!Files.exists(localPath)) {
+                    throw new PdfProcessingException("Local file read failure: File does not exist at " + localPath);
                 }
 
-                if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
-                    throw new PdfProcessingException("Invalid file type: Expected application/pdf but got " + contentType);
+                try {
+                    long size = Files.size(localPath);
+                    String contentType = Files.probeContentType(localPath);
+                    
+                    // Fallback content type detection if probeContentType returns null
+                    if (contentType == null && localPath.getFileName().toString().toLowerCase().endsWith(".pdf")) {
+                        contentType = "application/pdf";
+                    }
+
+                    LOGGER.info("Local Object Metadata - Path: {}, Size: {} bytes, Type: {}", localPath, size, contentType);
+
+                    if (size <= 0) {
+                        throw new PdfProcessingException("Invalid PDF: File size is 0 or empty.");
+                    }
+
+                    if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
+                        throw new PdfProcessingException("Invalid file type: Expected application/pdf but got " + contentType);
+                    }
+                } catch (IOException e) {
+                    throw new PdfProcessingException("Failed to read local file metadata: " + e.getMessage(), e);
                 }
-            } catch (IOException e) {
-                throw new PdfProcessingException("Failed to read local file metadata: " + e.getMessage(), e);
             }
         }
     }
@@ -149,9 +188,19 @@ public class S3Service {
      * The caller is responsible for closing the stream.
      */
     public InputStream getObjectStream(String fileUrl) {
-        String key = extractKey(fileUrl);
-        LOGGER.info("Opening stream for key/URL: {}", fileUrl);
+        LOGGER.info("Opening stream for URL/key: {}", fileUrl);
 
+        if (fileUrl != null && fileUrl.startsWith("http") && !isLocalUrl(fileUrl)) {
+            try {
+                java.net.URL url = new java.net.URL(fileUrl);
+                return url.openStream();
+            } catch (IOException e) {
+                LOGGER.error("Failed to open HTTP stream for URL: {}", fileUrl, e);
+                throw new PdfProcessingException("Failed to open stream for S3 URL: " + fileUrl + ". " + e.getMessage(), e);
+            }
+        }
+
+        String key = extractKey(fileUrl);
         if (isS3Enabled) {
             try {
                 GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -280,5 +329,18 @@ public class S3Service {
             LOGGER.warn("Failed to parse URL for S3 key extraction: {}. Using URL as key directly.", fileUrl);
         }
         return fileUrl;
+    }
+
+    private boolean isLocalUrl(String fileUrl) {
+        try {
+            if (fileUrl != null && fileUrl.startsWith("http")) {
+                java.net.URL url = new java.net.URL(fileUrl);
+                String host = url.getHost();
+                return host.equals("localhost") || host.equals("127.0.0.1");
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return false;
     }
 }

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -45,6 +46,7 @@ public class StoryExtractionService {
     private final ContentGenerationService contentGenerationService;
     private final TransactionTemplate transactionTemplate;
     private final AuditLogRepository auditLogRepository;
+    private final MediaGenerationService mediaGenerationService;
 
     public StoryExtractionService(
             MagazineRepository magazineRepository,
@@ -56,7 +58,8 @@ public class StoryExtractionService {
             PdfProcessingService pdfProcessingService,
             ContentGenerationService contentGenerationService,
             PlatformTransactionManager transactionManager,
-            AuditLogRepository auditLogRepository) {
+            AuditLogRepository auditLogRepository,
+            MediaGenerationService mediaGenerationService) {
         this.magazineRepository = magazineRepository;
         this.storyRepository = storyRepository;
         this.contentCalendarRepository = contentCalendarRepository;
@@ -67,6 +70,7 @@ public class StoryExtractionService {
         this.contentGenerationService = contentGenerationService;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.auditLogRepository = auditLogRepository;
+        this.mediaGenerationService = mediaGenerationService;
     }
 
     /**
@@ -109,17 +113,22 @@ public class StoryExtractionService {
                 throw new IllegalStateException("Magazine went missing during initialization: " + magazineId);
             }
 
-            // 2. Validate S3 object metadata
-            executeWithRetry("Validate storage metadata", () -> {
-                s3Service.validateS3Object(magazine.getFilePath());
-                return null;
+            File localFile = new File(magazine.getFilePath());
+            if (!localFile.exists()) {
+                throw new RuntimeException("Local file not found for extraction: " + magazine.getFilePath());
+            }
+
+            // 2. Extract text natively from local file
+            String rawText = executeWithRetry("Local PDF extraction", () -> {
+                try (InputStream fileStream = new java.io.FileInputStream(localFile)) {
+                    return pdfProcessingService.extractText(fileStream);
+                }
             });
 
-            // 3. Download/Stream and extract text from S3 directly without temp files
-            String rawText = executeWithRetry("S3 stream & PDF extraction", () -> {
-                try (InputStream s3Stream = s3Service.getObjectStream(magazine.getFilePath())) {
-                    return pdfProcessingService.extractText(s3Stream);
-                }
+            // 3. Preload all necessary media thumbnails and upload to S3
+            executeWithRetry("Preload media thumbnails", () -> {
+                mediaGenerationService.preloadMagazineMedia(magazine, localFile);
+                return null;
             });
 
             // 4. Generate structured 30-day content plan JSON via LLM
@@ -166,6 +175,11 @@ public class StoryExtractionService {
                     List<String> keywords = (List<String>) item.get("keywords");
                     String contentAngle = (String) item.get("contentAngle");
                     String postText = (String) item.get("postText");
+                    
+                    // Append the required subscription link since we removed it from the LLM prompt to save tokens
+                    if (postText != null && !postText.contains("campaign.sailortoday.in")) {
+                        postText = postText.trim() + "\n\nSubscribe: https://campaign.sailortoday.in/campaign?utmMedium=whatsapp";
+                    }
 
                     // Create Story
                     Story story = new Story(currentMagazine.getTenant(), currentMagazine, storyTitle);

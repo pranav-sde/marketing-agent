@@ -70,11 +70,11 @@ public class GroqClient {
             );
         }
 
-        Map<String, Object> requestBody = Map.of(
-                "model", model,
-                "messages", messages,
-                "temperature", temperature
-        );
+        Map<String, Object> requestBody = new java.util.HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", messages);
+        requestBody.put("temperature", temperature);
+        requestBody.put("max_tokens", 3000); // Fit within Groq free tier 12k TPM
 
         LOGGER.debug("Sending request to Groq API with model: {}", model);
 
