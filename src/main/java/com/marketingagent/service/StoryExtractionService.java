@@ -74,13 +74,26 @@ public class StoryExtractionService {
     }
 
     /**
-     * Asynchronously process a magazine PDF.
-     * Note: This method is NOT @Transactional at the class/method level to prevent holding database connections
-     * during long network operations (S3 downloads and LLM calls). Database updates are isolated.
+     * Asynchronously process a magazine PDF using file stored at magazine.getFilePath().
      */
     @Async
     public void extractStoriesAsync(UUID magazineId) {
         LOGGER.info("Starting async pipeline for magazine: {}", magazineId);
+        // Retrieve file path from DB record
+        String filePath = transactionTemplate.execute(status -> {
+            Magazine m = magazineRepository.findById(magazineId).orElse(null);
+            return m != null ? m.getFilePath() : null;
+        });
+        extractStoriesAsyncFromFile(magazineId, filePath);
+    }
+
+    /**
+     * Asynchronously process a magazine PDF from an explicit file path (used for retries).
+     */
+    @Async
+    public void extractStoriesAsyncFromFile(UUID magazineId, String explicitFilePath) {
+        LOGGER.info("Starting async pipeline for magazine: {} with file: {}", magazineId, explicitFilePath);
+
 
         // 1. Transition status to EXTRACTING
         Boolean started = transactionTemplate.execute(status -> {
@@ -113,9 +126,9 @@ public class StoryExtractionService {
                 throw new IllegalStateException("Magazine went missing during initialization: " + magazineId);
             }
 
-            File localFile = new File(magazine.getFilePath());
+            File localFile = new File(explicitFilePath != null ? explicitFilePath : magazine.getFilePath());
             if (!localFile.exists()) {
-                throw new RuntimeException("Local file not found for extraction: " + magazine.getFilePath());
+                throw new RuntimeException("Local file not found for extraction: " + localFile.getAbsolutePath());
             }
 
             // 2. Extract text natively from local file

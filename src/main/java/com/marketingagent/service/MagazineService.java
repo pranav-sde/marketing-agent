@@ -103,6 +103,41 @@ public class MagazineService {
                             existing.getId(), existing.getProcessingStatus());
                     return MagazineDto.from(existing);
                 }
+                // If FAILED or UPLOADED (stuck), reset it and re-process with the new file
+                if (existing.getProcessingStatus() == MagazineStatus.FAILED || 
+                    existing.getProcessingStatus() == MagazineStatus.UPLOADED) {
+                    LOGGER.info("Re-processing previously failed/stuck magazine ID: {}", existing.getId());
+                    existing.setProcessingStatus(MagazineStatus.UPLOADED);
+                    existing.setErrorMessage(null);
+                    existing.setExtractedText(null);
+                    existing.setContentPlanJson(null);
+                    magazineRepository.save(existing);
+                    
+                    // Save file to new location and update path
+                    Path tenantDir = Paths.get(uploadDir, "magazines", tenantId.toString());
+                    Files.createDirectories(tenantDir);
+                    String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
+                    Path targetLocation = tenantDir.resolve(fileName);
+                    Files.write(targetLocation, fileBytes);
+                    // Note: filePath field is immutable by design, trigger extraction with current file
+                    final UUID retryMagazineId = existing.getId();
+                    // Trigger async extraction
+                    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        Magazine savedExisting = existing;
+                        savedExisting.setProcessingStatus(MagazineStatus.EXTRACTING);
+                        magazineRepository.save(savedExisting);
+                        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                            new org.springframework.transaction.support.TransactionSynchronization() {
+                                @Override
+                                public void afterCommit() {
+                                    storyExtractionService.extractStoriesAsyncFromFile(retryMagazineId, targetLocation.toAbsolutePath().toString());
+                                }
+                            });
+                    } else {
+                        storyExtractionService.extractStoriesAsyncFromFile(retryMagazineId, targetLocation.toAbsolutePath().toString());
+                    }
+                    return MagazineDto.from(existing);
+                }
             }
 
             // Create tenant specific directory
