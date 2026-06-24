@@ -91,6 +91,13 @@ public class MagazineController {
         return ResponseEntity.ok(contentCalendarService.getCalendar(tenantId, magazineId));
     }
 
+    @PostMapping("/{magazineId}/reprocess")
+    public ResponseEntity<MagazineDto> reprocessMagazine(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID magazineId) {
+        return ResponseEntity.ok(magazineService.reprocessMagazine(tenantId, magazineId));
+    }
+
     @org.springframework.web.bind.annotation.DeleteMapping("/{magazineId}")
     public ResponseEntity<Void> deleteMagazine(
             @PathVariable UUID tenantId,

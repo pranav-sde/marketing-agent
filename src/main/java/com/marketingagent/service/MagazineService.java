@@ -60,6 +60,42 @@ public class MagazineService {
     }
 
     @Transactional
+    public MagazineDto reprocessMagazine(UUID tenantId, UUID magazineId) {
+        Magazine magazine = getMagazineEntity(tenantId, magazineId);
+        com.marketingagent.domain.magazine.MagazineStatus status = magazine.getProcessingStatus();
+        
+        if (status == com.marketingagent.domain.magazine.MagazineStatus.EXTRACTING) {
+            LOGGER.info("Magazine {} is already being extracted, skipping reprocess.", magazineId);
+            return MagazineDto.from(magazine);
+        }
+        
+        // Reset state so extraction can proceed
+        magazine.setProcessingStatus(com.marketingagent.domain.magazine.MagazineStatus.UPLOADED);
+        magazine.setErrorMessage(null);
+        magazine.setExtractedText(null);
+        magazine.setContentPlanJson(null);
+        magazineRepository.save(magazine);
+        
+        LOGGER.info("Triggering reprocess for magazine: {} (was: {})", magazineId, status);
+        
+        // Trigger async extraction using the stored file path
+        final UUID finalMagazineId = magazineId;
+        final String filePath = magazine.getFilePath();
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    storyExtractionService.extractStoriesAsyncFromFile(finalMagazineId, filePath);
+                }
+            });
+        } else {
+            storyExtractionService.extractStoriesAsyncFromFile(finalMagazineId, filePath);
+        }
+        
+        return MagazineDto.from(magazine);
+    }
+
+    @Transactional
     public void deleteMagazine(UUID tenantId, UUID magazineId) {
         Magazine magazine = getMagazineEntity(tenantId, magazineId);
         
