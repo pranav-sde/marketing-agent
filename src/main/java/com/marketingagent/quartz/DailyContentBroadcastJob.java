@@ -129,8 +129,7 @@ public class DailyContentBroadcastJob implements Job {
                 
                 WhatsAppMessageResponse response = null;
 
-                if (phoneId == null || phoneId.isBlank() || phoneId.contains("placeholder")) {
-                    phoneId = "default_phone_number_id"; // Mock behavior if not configured
+                if (isMockMode(phoneId, accessToken)) {
                     LOGGER.warn("WhatsApp Phone Number ID not configured. Simulating send to {} (media: {})", 
                             subscriber.getPhoneE164(), mediaUrl);
                     outboundMessage.setProviderMessageId("mock-wamid-" + java.util.UUID.randomUUID().toString());
@@ -200,5 +199,14 @@ public class DailyContentBroadcastJob implements Job {
 
         entry.setStatus(ContentCalendarStatus.SENT);
         contentCalendarRepository.save(entry);
+    }
+
+    private boolean isMockMode(String phoneId, String accessToken) {
+        return phoneId == null
+                || phoneId.isBlank()
+                || accessToken == null
+                || accessToken.isBlank()
+                || phoneId.contains("placeholder")
+                || accessToken.contains("placeholder");
     }
 }

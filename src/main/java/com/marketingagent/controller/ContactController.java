@@ -2,6 +2,8 @@ package com.marketingagent.controller;
 
 import com.marketingagent.dto.contact.ConsentEventDto;
 import com.marketingagent.dto.contact.ConsentRecordRequest;
+import com.marketingagent.dto.contact.BulkContactImportRequest;
+import com.marketingagent.dto.contact.BulkContactImportResultDto;
 import com.marketingagent.dto.contact.ContactCreateRequest;
 import com.marketingagent.dto.contact.ContactDto;
 import com.marketingagent.service.ConsentService;
@@ -32,6 +34,15 @@ public class ContactController {
     ) {
         ContactDto created = contactService.createContact(tenantId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<BulkContactImportResultDto> importContacts(
+            @PathVariable UUID tenantId,
+            @Valid @RequestBody BulkContactImportRequest request
+    ) {
+        BulkContactImportResultDto result = contactService.importContacts(tenantId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @GetMapping

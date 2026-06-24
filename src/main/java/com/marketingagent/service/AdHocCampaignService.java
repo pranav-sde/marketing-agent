@@ -56,7 +56,7 @@ public class AdHocCampaignService {
 
         Instant scheduledTime = request.scheduledTime();
         if (scheduledTime.isBefore(Instant.now())) {
-            scheduledTime = Instant.now().plusSeconds(60); // Schedule at least 1 min in future if past
+            scheduledTime = Instant.now().plusSeconds(5);
         }
 
         AdHocCampaign campaign = new AdHocCampaign(
@@ -204,6 +204,11 @@ public class AdHocCampaignService {
         return AdHocCampaignDto.from(adHocCampaignRepository.save(campaign));
     }
 
+    @Transactional
+    public AdHocCampaignDto sendNow(UUID tenantId, UUID campaignId) {
+        return rescheduleCampaign(tenantId, campaignId, Instant.now().plusSeconds(5));
+    }
+
     private AdHocCampaign getAndVerifyCampaign(UUID tenantId, UUID campaignId) {
         AdHocCampaign campaign = adHocCampaignRepository.findById(campaignId)
                 .orElseThrow(() -> new ResourceNotFoundException("AdHocCampaign", campaignId));
@@ -215,8 +220,13 @@ public class AdHocCampaignService {
 
     private void scheduleJob(AdHocCampaign campaign) {
         try {
+            org.quartz.JobKey jobKey = org.quartz.JobKey.jobKey("adhoc-campaign-" + campaign.getId(), "adhoc-campaigns");
+            if (scheduler.checkExists(jobKey)) {
+                scheduler.deleteJob(jobKey);
+            }
+
             JobDetail jobDetail = JobBuilder.newJob(AdHocBroadcastJob.class)
-                    .withIdentity("adhoc-campaign-" + campaign.getId(), "adhoc-campaigns")
+                    .withIdentity(jobKey)
                     .usingJobData("campaignId", campaign.getId().toString())
                     .build();
 

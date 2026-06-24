@@ -230,8 +230,8 @@ public class AdHocBroadcastJob implements InterruptableJob {
     private Mono<ContentOutboundMessage> sendWhatsAppMessageReactive(AdHocCampaign campaign, Contact subscriber, String phoneId, String accessToken, ContentOutboundMessage outboundMessage) {
         boolean hasMedia = campaign.getMediaUrl() != null && !campaign.getMediaUrl().isBlank();
 
-        if (phoneId == null || phoneId.isBlank() || phoneId.contains("placeholder")) {
-            LOGGER.warn("WhatsApp Phone Number ID not configured. Simulating send to {}", subscriber.getPhoneE164());
+        if (isMockMode(phoneId, accessToken)) {
+            LOGGER.warn("WhatsApp credentials not configured. Simulating send to {}", subscriber.getPhoneE164());
             outboundMessage.setProviderMessageId("mock-adhoc-wamid-" + UUID.randomUUID().toString());
             outboundMessage.setStatus(OutboundMessageStatus.SENT);
             outboundMessage.setSentAt(Instant.now());
@@ -264,5 +264,14 @@ public class AdHocBroadcastJob implements InterruptableJob {
                 return outboundMessage;
             });
         }
+    }
+
+    private boolean isMockMode(String phoneId, String accessToken) {
+        return phoneId == null
+                || phoneId.isBlank()
+                || accessToken == null
+                || accessToken.isBlank()
+                || phoneId.contains("placeholder")
+                || accessToken.contains("placeholder");
     }
 }

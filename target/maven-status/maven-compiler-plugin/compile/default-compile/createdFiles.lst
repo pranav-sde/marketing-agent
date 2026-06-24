@@ -27,10 +27,12 @@ com/marketingagent/domain/tenant/Tenant.class
 com/marketingagent/exception/ErrorResponse.class
 com/marketingagent/controller/BroadcastController.class
 com/marketingagent/service/ContentGenerationService.class
+com/marketingagent/dto/contact/BulkContactImportRequest.class
 com/marketingagent/repository/AgentTaskRepository.class
 com/marketingagent/repository/ConsentEventRepository.class
 com/marketingagent/domain/template/TemplateCategory.class
 com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.class
+com/marketingagent/util/ResetStuckMagazines.class
 com/marketingagent/domain/message/DeliveryEventType.class
 com/marketingagent/repository/ContactChannelStateRepository.class
 com/marketingagent/security/ApiKeyAuthenticationFilter.class
@@ -56,6 +58,7 @@ com/marketingagent/domain/magazine/GeneratedContent.class
 com/marketingagent/service/ContentCalendarService.class
 com/marketingagent/domain/contact/ContactAttribute.class
 com/marketingagent/domain/audit/DataExportStatus.class
+com/marketingagent/service/MagazineService$3.class
 com/marketingagent/domain/message/DeliveryEvent.class
 com/marketingagent/domain/integration/WhatsAppAccountStatus.class
 com/marketingagent/service/ConsentService$1.class
@@ -100,6 +103,7 @@ com/marketingagent/domain/user/Membership.class
 com/marketingagent/domain/campaign/CampaignAssetType.class
 com/marketingagent/domain/contact/SuppressionListEntry.class
 com/marketingagent/service/StoryExtractionService$RetryableCallable.class
+com/marketingagent/dto/contact/BulkContactImportResultDto.class
 com/marketingagent/dto/contact/ConsentRecordRequest.class
 com/marketingagent/domain/broadcast/BroadcastBatchStatus.class
 com/marketingagent/dto/broadcast/BroadcastCreateRequest.class
@@ -117,6 +121,7 @@ com/marketingagent/repository/MessageAttemptRepository.class
 com/marketingagent/domain/common/ProviderType.class
 com/marketingagent/dto/campaign/CampaignDto.class
 com/marketingagent/repository/MagazineRepository.class
+com/marketingagent/service/MagazineService$2.class
 com/marketingagent/dto/message/OutboundMessageDto.class
 com/marketingagent/service/MagazineService.class
 com/marketingagent/service/WebhookEventService.class

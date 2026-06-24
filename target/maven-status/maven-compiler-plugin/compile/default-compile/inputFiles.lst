@@ -91,6 +91,8 @@
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/campaign/CampaignDto.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/campaign/CampaignReviewRequest.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/contact/BulkContactImportRequest.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/contact/BulkContactImportResultDto.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/contact/ConsentEventDto.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/contact/ConsentRecordRequest.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/contact/ContactCreateRequest.java
@@ -179,6 +181,7 @@
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/TemplateService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/TenantService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/WebhookEventService.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/util/ResetStuckMagazines.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/webclient/WebClientConfig.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/webclient/WhatsAppClientProperties.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/webclient/groq/GroqClient.java

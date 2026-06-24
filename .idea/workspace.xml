@@ -6,14 +6,27 @@
   <component name="ChangeListManager">
     <list default="true" id="c2acbf2a-3366-4c4b-9ead-4ee8dc62c92e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContentGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContentGenerationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MagazineService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MagazineService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MediaGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MediaGenerationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/S3Service.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/S3Service.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/MarketingAgentApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/MarketingAgentApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/AdHocCampaignController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/AdHocCampaignController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/ContactController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/ContactController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/MagazineDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/MagazineDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/AdHocBroadcastJob.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/AdHocBroadcastJob.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/DailyContentBroadcastJob.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/DailyContentBroadcastJob.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AdHocCampaignService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AdHocCampaignService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContactService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContactService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/groq/GroqClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/groq/GroqClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/MarketingAgentApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/MarketingAgentApplication.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ContactService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ContactService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

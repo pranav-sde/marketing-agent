@@ -12,7 +12,8 @@ public record MagazineDto(
         String title,
         Long fileSize,
         MagazineStatus processingStatus,
-        Instant createdAt
+        Instant createdAt,
+        String errorMessage
 ) {
     public static MagazineDto from(Magazine magazine) {
         return new MagazineDto(
@@ -21,7 +22,8 @@ public record MagazineDto(
                 magazine.getTitle(),
                 magazine.getFileSize(),
                 magazine.getProcessingStatus(),
-                magazine.getCreatedAt()
+                magazine.getCreatedAt(),
+                magazine.getErrorMessage()
         );
     }
 }

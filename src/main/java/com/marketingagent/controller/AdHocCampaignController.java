@@ -4,6 +4,7 @@ import com.marketingagent.dto.campaign.AdHocCampaignDto;
 import com.marketingagent.dto.campaign.CreateAdHocCampaignRequest;
 import com.marketingagent.dto.message.ContentAnalyticsDto;
 import com.marketingagent.service.AdHocCampaignService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +31,7 @@ public class AdHocCampaignController {
     @PostMapping
     public ResponseEntity<AdHocCampaignDto> createCampaign(
             @PathVariable UUID tenantId,
-            @RequestBody CreateAdHocCampaignRequest request) {
+            @Valid @RequestBody CreateAdHocCampaignRequest request) {
         return ResponseEntity.ok(adHocCampaignService.createCampaign(tenantId, request));
     }
 
@@ -88,5 +89,12 @@ public class AdHocCampaignController {
         }
         java.time.Instant newTime = java.time.Instant.parse(request.get("scheduledTime"));
         return ResponseEntity.ok(adHocCampaignService.rescheduleCampaign(tenantId, campaignId, newTime));
+    }
+
+    @PostMapping("/{campaignId}/send-now")
+    public ResponseEntity<AdHocCampaignDto> sendNow(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID campaignId) {
+        return ResponseEntity.ok(adHocCampaignService.sendNow(tenantId, campaignId));
     }
 }

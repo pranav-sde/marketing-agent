@@ -8,6 +8,8 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ContactRepository extends JpaRepository<Contact, UUID> {
+    List<Contact> findByTenant_Id(UUID tenantId);
+
     Optional<Contact> findByTenant_IdAndPhoneE164(UUID tenantId, String phoneE164);
 
     Optional<Contact> findByTenant_IdAndPhoneHash(UUID tenantId, String phoneHash);

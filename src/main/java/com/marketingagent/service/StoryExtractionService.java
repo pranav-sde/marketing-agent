@@ -181,16 +181,41 @@ public class StoryExtractionService {
 
                 LocalDate startDate = LocalDate.now().plusDays(1);
 
+                int fallbackDayNumber = 1;
                 for (Map<String, Object> item : planItems) {
-                    Integer dayNumber = ((Number) item.get("dayNumber")).intValue();
-                    String storyTitle = (String) item.get("storyTitle");
-                    String summary = (String) item.get("summary");
-                    List<String> keywords = (List<String>) item.get("keywords");
-                    String contentAngle = (String) item.get("contentAngle");
-                    String postText = (String) item.get("postText");
+                    Number dayNumObj = null;
+                    if (item.get("dayNumber") instanceof Number) {
+                        dayNumObj = (Number) item.get("dayNumber");
+                    } else if (item.get("day_number") instanceof Number) {
+                        dayNumObj = (Number) item.get("day_number");
+                    } else if (item.get("day") instanceof Number) {
+                        dayNumObj = (Number) item.get("day");
+                    }
+                    
+                    int dayNumber = dayNumObj != null ? dayNumObj.intValue() : fallbackDayNumber;
+                    fallbackDayNumber = dayNumber + 1;
+
+                    String storyTitle = item.get("storyTitle") != null ? item.get("storyTitle").toString() : 
+                                       item.get("title") != null ? item.get("title").toString() : "Untitled Story";
+                                       
+                    String summary = item.get("summary") != null ? item.get("summary").toString() : "";
+                    
+                    List<String> keywords = List.of();
+                    Object keywordsObj = item.get("keywords");
+                    if (keywordsObj instanceof List) {
+                        keywords = ((List<?>) keywordsObj).stream().map(Object::toString).toList();
+                    } else if (keywordsObj instanceof String) {
+                        keywords = List.of(((String) keywordsObj).split(",\\s*"));
+                    }
+                    
+                    String contentAngle = item.get("contentAngle") != null ? item.get("contentAngle").toString() : 
+                                         item.get("content_angle") != null ? item.get("content_angle").toString() : "Educational";
+                                         
+                    String postText = item.get("postText") != null ? item.get("postText").toString() : 
+                                      item.get("post_text") != null ? item.get("post_text").toString() : "";
                     
                     // Append the required subscription link since we removed it from the LLM prompt to save tokens
-                    if (postText != null && !postText.contains("campaign.sailortoday.in")) {
+                    if (!postText.contains("campaign.sailortoday.in")) {
                         postText = postText.trim() + "\n\nSubscribe: https://campaign.sailortoday.in/campaign?utmMedium=whatsapp";
                     }
 

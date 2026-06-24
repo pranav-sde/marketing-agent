@@ -40,7 +40,7 @@ public class WhatsAppMessageClient {
     ) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("messaging_product", "whatsapp");
-        payload.put("to", "919307712930"); // Hardcoded for now
+        payload.put("to", request.to());
         payload.put("type", "template");
         payload.put("template", Map.of(
                 "name", request.templateName(),
@@ -81,7 +81,7 @@ public class WhatsAppMessageClient {
     ) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("messaging_product", "whatsapp");
-        payload.put("to", "919307712930"); // Hardcoded for now
+        payload.put("to", to);
         payload.put("type", "text");
         payload.put("text", Map.of("body", text, "preview_url", true));
 
@@ -111,7 +111,7 @@ public class WhatsAppMessageClient {
     ) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("messaging_product", "whatsapp");
-        payload.put("to", "919307712930"); // Hardcoded for now
+        payload.put("to", to);
         payload.put("type", "image");
         payload.put("image", Map.of("link", imageUrl, "caption", caption));
 
