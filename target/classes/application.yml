@@ -96,7 +96,7 @@ marketing-agent:
     api-key: ${GROQ_API_KEY:placeholder_api_key}
     default-model: ${GROQ_DEFAULT_MODEL:llama-3.3-70b-versatile}
   storage:
-    upload-dir: ${UPLOAD_DIR:./uploads}
+    upload-dir: ${UPLOAD_DIR:/tmp/marketing-agent-uploads}
     s3:
       bucket: ${AWS_S3_BUCKET:}
       access-key: ${AWS_ACCESS_KEY_ID:}
