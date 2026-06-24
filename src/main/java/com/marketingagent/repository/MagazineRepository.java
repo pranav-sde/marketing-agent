@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface MagazineRepository extends JpaRepository<Magazine, UUID> {
     List<Magazine> findByTenant_IdOrderByCreatedAtDesc(UUID tenantId);
+    java.util.Optional<Magazine> findByTenant_IdAndFileHash(UUID tenantId, String fileHash);
 }

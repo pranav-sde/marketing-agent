@@ -11,6 +11,9 @@ import com.marketingagent.webclient.whatsapp.WhatsAppMessageResponse;
 import com.marketingagent.repository.AdHocCampaignRepository;
 import com.marketingagent.repository.ContactRepository;
 import com.marketingagent.repository.ContentOutboundMessageRepository;
+import com.marketingagent.repository.AuditLogRepository;
+import com.marketingagent.domain.audit.AuditActionType;
+import com.marketingagent.domain.audit.AuditLog;
 import com.marketingagent.webclient.WhatsAppClientProperties;
 import com.marketingagent.webclient.whatsapp.WhatsAppMessageClient;
 import org.quartz.InterruptableJob;
@@ -45,18 +48,22 @@ public class AdHocBroadcastJob implements InterruptableJob {
     private final WhatsAppMessageClient whatsAppMessageClient;
     private final WhatsAppClientProperties whatsAppClientProperties;
 
+    private final AuditLogRepository auditLogRepository;
+
     private volatile boolean isInterrupted = false;
 
     public AdHocBroadcastJob(AdHocCampaignRepository adHocCampaignRepository,
                              ContactRepository contactRepository,
                              ContentOutboundMessageRepository contentOutboundMessageRepository,
                              WhatsAppMessageClient whatsAppMessageClient,
-                             WhatsAppClientProperties whatsAppClientProperties) {
+                             WhatsAppClientProperties whatsAppClientProperties,
+                             AuditLogRepository auditLogRepository) {
         this.adHocCampaignRepository = adHocCampaignRepository;
         this.contactRepository = contactRepository;
         this.contentOutboundMessageRepository = contentOutboundMessageRepository;
         this.whatsAppMessageClient = whatsAppMessageClient;
         this.whatsAppClientProperties = whatsAppClientProperties;
+        this.auditLogRepository = auditLogRepository;
     }
 
     @Override
@@ -172,8 +179,36 @@ public class AdHocBroadcastJob implements InterruptableJob {
                 if (processedMessages != null) {
                     contentOutboundMessageRepository.saveAll(processedMessages);
                     for (ContentOutboundMessage msg : processedMessages) {
-                        if (msg.getStatus() == OutboundMessageStatus.SENT) successCount++;
-                        else if (msg.getStatus() == OutboundMessageStatus.FAILED) failCount++;
+                        if (msg.getStatus() == OutboundMessageStatus.SENT) {
+                            successCount++;
+                            // Audit log: WhatsApp message sent successfully
+                            AuditLog log = new AuditLog(tenant, null, AuditActionType.WHATSAPP_MESSAGE_SENT, java.time.Instant.now());
+                            log.setEntityType("ContentOutboundMessage");
+                            log.setEntityId(msg.getId());
+                            log.setDetails(java.util.Map.of(
+                                "contactPhone", msg.getContact().getPhoneE164(),
+                                "contactName", msg.getContact().getFirstName() != null ? msg.getContact().getFirstName() : "",
+                                "messageText", campaign.getMessageText() != null ? campaign.getMessageText() : "",
+                                "type", "AdHocCampaign",
+                                "campaignId", campaign.getId().toString()
+                            ));
+                            auditLogRepository.save(log);
+                        } else if (msg.getStatus() == OutboundMessageStatus.FAILED) {
+                            failCount++;
+                            // Audit log: WhatsApp message sending failed
+                            AuditLog log = new AuditLog(tenant, null, AuditActionType.WHATSAPP_MESSAGE_FAILED, java.time.Instant.now());
+                            log.setEntityType("ContentOutboundMessage");
+                            log.setEntityId(msg.getId());
+                            log.setDetails(java.util.Map.of(
+                                "contactPhone", msg.getContact().getPhoneE164(),
+                                "contactName", msg.getContact().getFirstName() != null ? msg.getContact().getFirstName() : "",
+                                "messageText", campaign.getMessageText() != null ? campaign.getMessageText() : "",
+                                "type", "AdHocCampaign",
+                                "campaignId", campaign.getId().toString(),
+                                "error", msg.getLastErrorMessage() != null ? msg.getLastErrorMessage() : "Unknown error"
+                            ));
+                            auditLogRepository.save(log);
+                        }
                     }
                 }
             }

@@ -58,6 +58,12 @@ public class Magazine extends BaseEntity {
     @Column(name = "error_message", columnDefinition = "text")
     private String errorMessage;
 
+    @Column(name = "file_hash", length = 64)
+    private String fileHash;
+
+    @Column(name = "content_plan_json", columnDefinition = "text")
+    private String contentPlanJson;
+
     protected Magazine() {
     }
 
@@ -88,4 +94,10 @@ public class Magazine extends BaseEntity {
 
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+
+    public String getFileHash() { return fileHash; }
+    public void setFileHash(String fileHash) { this.fileHash = fileHash; }
+
+    public String getContentPlanJson() { return contentPlanJson; }
+    public void setContentPlanJson(String contentPlanJson) { this.contentPlanJson = contentPlanJson; }
 }

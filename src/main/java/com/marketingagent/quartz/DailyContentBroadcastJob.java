@@ -12,6 +12,9 @@ import com.marketingagent.repository.ContactRepository;
 import com.marketingagent.repository.ContentCalendarRepository;
 import com.marketingagent.repository.ContentOutboundMessageRepository;
 import com.marketingagent.repository.GeneratedContentRepository;
+import com.marketingagent.repository.AuditLogRepository;
+import com.marketingagent.domain.audit.AuditActionType;
+import com.marketingagent.domain.audit.AuditLog;
 import com.marketingagent.webclient.WhatsAppClientProperties;
 import com.marketingagent.webclient.whatsapp.WhatsAppMessageClient;
 import com.marketingagent.webclient.whatsapp.WhatsAppMessageResponse;
@@ -41,6 +44,7 @@ public class DailyContentBroadcastJob implements Job {
     private final ContentOutboundMessageRepository contentOutboundMessageRepository;
     private final WhatsAppMessageClient whatsAppMessageClient;
     private final WhatsAppClientProperties whatsAppClientProperties;
+    private final AuditLogRepository auditLogRepository;
 
     public DailyContentBroadcastJob(
             ContentCalendarRepository contentCalendarRepository,
@@ -48,13 +52,15 @@ public class DailyContentBroadcastJob implements Job {
             ContactRepository contactRepository,
             ContentOutboundMessageRepository contentOutboundMessageRepository,
             WhatsAppMessageClient whatsAppMessageClient,
-            WhatsAppClientProperties whatsAppClientProperties) {
+            WhatsAppClientProperties whatsAppClientProperties,
+            AuditLogRepository auditLogRepository) {
         this.contentCalendarRepository = contentCalendarRepository;
         this.generatedContentRepository = generatedContentRepository;
         this.contactRepository = contactRepository;
         this.contentOutboundMessageRepository = contentOutboundMessageRepository;
         this.whatsAppMessageClient = whatsAppMessageClient;
         this.whatsAppClientProperties = whatsAppClientProperties;
+        this.auditLogRepository = auditLogRepository;
     }
 
     @Override
@@ -152,14 +158,41 @@ public class DailyContentBroadcastJob implements Job {
                 
                 outboundMessage.setStatus(OutboundMessageStatus.SENT);
                 outboundMessage.setSentAt(Instant.now());
-                contentOutboundMessageRepository.save(outboundMessage);
+                outboundMessage = contentOutboundMessageRepository.save(outboundMessage);
                 successCount++;
+
+                // Audit log: WhatsApp message sent successfully
+                AuditLog log = new AuditLog(tenant, null, AuditActionType.WHATSAPP_MESSAGE_SENT, java.time.Instant.now());
+                log.setEntityType("ContentOutboundMessage");
+                log.setEntityId(outboundMessage.getId());
+                log.setDetails(java.util.Map.of(
+                    "contactPhone", subscriber.getPhoneE164(),
+                    "contactName", subscriber.getFirstName() != null ? subscriber.getFirstName() : "",
+                    "messageText", whatsappContent.getMessageText() != null ? whatsappContent.getMessageText() : "",
+                    "type", "DailyBroadcast",
+                    "calendarEntryId", entry.getId().toString()
+                ));
+                auditLogRepository.save(log);
             } catch (Exception e) {
                 LOGGER.error("Failed to send message to contact {}", subscriber.getId(), e);
                 outboundMessage.setStatus(OutboundMessageStatus.FAILED);
                 outboundMessage.setLastErrorMessage(e.getMessage() != null && e.getMessage().length() > 500 ? e.getMessage().substring(0, 499) : e.getMessage());
-                contentOutboundMessageRepository.save(outboundMessage);
+                outboundMessage = contentOutboundMessageRepository.save(outboundMessage);
                 failCount++;
+
+                // Audit log: WhatsApp message sending failed
+                AuditLog log = new AuditLog(tenant, null, AuditActionType.WHATSAPP_MESSAGE_FAILED, java.time.Instant.now());
+                log.setEntityType("ContentOutboundMessage");
+                log.setEntityId(outboundMessage.getId());
+                log.setDetails(java.util.Map.of(
+                    "contactPhone", subscriber.getPhoneE164(),
+                    "contactName", subscriber.getFirstName() != null ? subscriber.getFirstName() : "",
+                    "messageText", whatsappContent.getMessageText() != null ? whatsappContent.getMessageText() : "",
+                    "type", "DailyBroadcast",
+                    "calendarEntryId", entry.getId().toString(),
+                    "error", e.getMessage() != null ? e.getMessage() : "Unknown error"
+                ));
+                auditLogRepository.save(log);
             }
         }
 

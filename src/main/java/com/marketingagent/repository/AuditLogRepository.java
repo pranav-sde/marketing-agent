@@ -11,4 +11,6 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
     List<AuditLog> findByTenant_IdAndActionType(UUID tenantId, AuditActionType actionType);
 
     List<AuditLog> findByTenant_IdAndOccurredAtBetween(UUID tenantId, Instant start, Instant end);
+
+    List<AuditLog> findByTenant_IdOrderByOccurredAtDesc(UUID tenantId);
 }

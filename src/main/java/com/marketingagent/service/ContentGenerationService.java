@@ -163,4 +163,38 @@ public class ContentGenerationService {
         generatedContentRepository.save(content);
         LOGGER.debug("Generated {} content for calendar entry day {}", platform.name(), entry.getDayNumber());
     }
+
+    public String generate30DayContentPlan(String magazineTitle, String rawText) {
+        String textForPrompt = rawText.length() > 50000 ? rawText.substring(0, 50000) : rawText;
+
+        String systemPrompt = "You are an expert social media copywriter and marketing planner. You must rely ONLY on the provided context.";
+        String userPrompt = String.format("""
+                Based on the magazine '%s' and the text context below, generate a structured 30-day content plan.
+                Your task is to extract stories/articles and create a post copy for each day.
+                
+                You MUST return ONLY a JSON array of exactly 30 entries. Do not wrap in markdown or add explanations.
+                Each object in the array must have the following fields:
+                - "dayNumber": Integer (from 1 to 30)
+                - "storyTitle": String (title of the magazine story this day is based on)
+                - "summary": String (brief summary of that story)
+                - "keywords": Array of strings (keywords for the story)
+                - "contentAngle": String (e.g. Educational, Inspirational, Promotional)
+                - "postText": String (engaging marketing post copy for WhatsApp, strictly between 150-200 characters, including 2-3 emojis, 2-3 hashtags, and concluding with: "Subscribe: https://campaign.sailortoday.in/campaign?utmMedium=whatsapp")
+                
+                STRICT RULES:
+                1. Do NOT hallucinate. Use ONLY facts from the provided text.
+                2. Return a valid JSON array of 30 items. No markdown wrapper!
+                
+                Magazine Text:
+                %s
+                """,
+                magazineTitle,
+                textForPrompt
+        );
+
+        String jsonResponse = groqClient.generateCompletion(systemPrompt, userPrompt);
+        
+        // Clean markdown blocks if returned
+        return jsonResponse.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();
+    }
 }

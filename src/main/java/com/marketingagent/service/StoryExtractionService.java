@@ -2,21 +2,30 @@ package com.marketingagent.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marketingagent.domain.magazine.ContentCalendar;
+import com.marketingagent.domain.magazine.ContentCalendarStatus;
+import com.marketingagent.domain.magazine.ContentPlatform;
+import com.marketingagent.domain.magazine.GeneratedContent;
 import com.marketingagent.domain.magazine.Magazine;
 import com.marketingagent.domain.magazine.MagazineStatus;
 import com.marketingagent.domain.magazine.Story;
+import com.marketingagent.domain.audit.AuditActionType;
+import com.marketingagent.domain.audit.AuditLog;
+import com.marketingagent.repository.AuditLogRepository;
+import com.marketingagent.repository.ContentCalendarRepository;
+import com.marketingagent.repository.GeneratedContentRepository;
 import com.marketingagent.repository.MagazineRepository;
 import com.marketingagent.repository.StoryRepository;
-import com.marketingagent.webclient.groq.GroqClient;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,95 +37,233 @@ public class StoryExtractionService {
 
     private final MagazineRepository magazineRepository;
     private final StoryRepository storyRepository;
-    private final GroqClient groqClient;
+    private final ContentCalendarRepository contentCalendarRepository;
+    private final GeneratedContentRepository generatedContentRepository;
     private final ObjectMapper objectMapper;
-    private final StorageService storageService;
+    private final S3Service s3Service;
+    private final PdfProcessingService pdfProcessingService;
+    private final ContentGenerationService contentGenerationService;
+    private final TransactionTemplate transactionTemplate;
+    private final AuditLogRepository auditLogRepository;
 
-    public StoryExtractionService(MagazineRepository magazineRepository, StoryRepository storyRepository, GroqClient groqClient, ObjectMapper objectMapper, StorageService storageService) {
+    public StoryExtractionService(
+            MagazineRepository magazineRepository,
+            StoryRepository storyRepository,
+            ContentCalendarRepository contentCalendarRepository,
+            GeneratedContentRepository generatedContentRepository,
+            ObjectMapper objectMapper,
+            S3Service s3Service,
+            PdfProcessingService pdfProcessingService,
+            ContentGenerationService contentGenerationService,
+            PlatformTransactionManager transactionManager,
+            AuditLogRepository auditLogRepository) {
         this.magazineRepository = magazineRepository;
         this.storyRepository = storyRepository;
-        this.groqClient = groqClient;
+        this.contentCalendarRepository = contentCalendarRepository;
+        this.generatedContentRepository = generatedContentRepository;
         this.objectMapper = objectMapper;
-        this.storageService = storageService;
+        this.s3Service = s3Service;
+        this.pdfProcessingService = pdfProcessingService;
+        this.contentGenerationService = contentGenerationService;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.auditLogRepository = auditLogRepository;
     }
 
+    /**
+     * Asynchronously process a magazine PDF.
+     * Note: This method is NOT @Transactional at the class/method level to prevent holding database connections
+     * during long network operations (S3 downloads and LLM calls). Database updates are isolated.
+     */
     @Async
-    @Transactional
     public void extractStoriesAsync(UUID magazineId) {
-        LOGGER.info("Starting async story extraction for magazine: {}", magazineId);
-        
-        Magazine magazine = magazineRepository.findById(magazineId).orElse(null);
-        if (magazine == null) {
-            LOGGER.error("Magazine not found for extraction: {}", magazineId);
+        LOGGER.info("Starting async pipeline for magazine: {}", magazineId);
+
+        // 1. Transition status to EXTRACTING
+        Boolean started = transactionTemplate.execute(status -> {
+            Magazine magazine = magazineRepository.findById(magazineId).orElse(null);
+            if (magazine == null) {
+                LOGGER.error("Magazine not found: {}", magazineId);
+                return false;
+            }
+            magazine.setProcessingStatus(MagazineStatus.EXTRACTING);
+            magazineRepository.save(magazine);
+
+            // Audit log: PDF extraction started
+            AuditLog log = new AuditLog(magazine.getTenant(), null, AuditActionType.PDF_EXTRACTION_STARTED, java.time.Instant.now());
+            log.setEntityType("Magazine");
+            log.setEntityId(magazineId);
+            log.setDetails(java.util.Map.of("magazineTitle", magazine.getTitle()));
+            auditLogRepository.save(log);
+
+            return true;
+        });
+
+        if (started == null || !started) {
             return;
         }
 
         try {
-            magazine.setProcessingStatus(MagazineStatus.EXTRACTING);
-            magazineRepository.save(magazine);
-
-            // Step 1: Extract raw text from PDF
-            String rawText = extractTextFromPdf(magazine.getFilePath());
-            magazine.setExtractedText(rawText);
-            
-            // Limit text size to avoid Groq token limits (e.g. max 50k chars for ~15k tokens)
-            String textForPrompt = rawText.length() > 50000 ? rawText.substring(0, 50000) : rawText;
-
-            // Step 2: Extract structured stories using Groq
-            String systemPrompt = "You are an expert marketing AI. Your task is to extract individual stories, articles, or coherent sections from the provided magazine text. " +
-                    "Return ONLY a JSON array of objects. Do not wrap it in markdown. Each object must have: " +
-                    "'title' (string), 'summary' (string), 'keywords' (array of strings), 'contentAngle' (string, e.g. Educational, Inspirational, Promotional).";
-            
-            String userPrompt = "Extract stories from the following text:\\n\\n" + textForPrompt;
-
-            String jsonResponse = groqClient.generateCompletion(systemPrompt, userPrompt);
-            
-            // Clean markdown blocks if Groq returns them
-            jsonResponse = jsonResponse.replaceAll("```json\\\\s*", "").replaceAll("```\\\\s*", "").trim();
-
-            List<Map<String, Object>> extractedItems = objectMapper.readValue(jsonResponse, new TypeReference<>() {});
-
-            for (Map<String, Object> item : extractedItems) {
-                Story story = new Story(magazine.getTenant(), magazine, (String) item.get("title"));
-                story.setSummary((String) item.get("summary"));
-                story.setKeywords((List<String>) item.get("keywords"));
-                story.setContentAngle((String) item.get("contentAngle"));
-                storyRepository.save(story);
+            // Load magazine metadata
+            Magazine magazine = transactionTemplate.execute(status -> magazineRepository.findById(magazineId).orElse(null));
+            if (magazine == null) {
+                throw new IllegalStateException("Magazine went missing during initialization: " + magazineId);
             }
 
-            magazine.setProcessingStatus(MagazineStatus.PROCESSED);
-            magazineRepository.save(magazine);
-            LOGGER.info("Successfully extracted {} stories for magazine {}", extractedItems.size(), magazineId);
+            // 2. Validate S3 object metadata
+            executeWithRetry("Validate storage metadata", () -> {
+                s3Service.validateS3Object(magazine.getFilePath());
+                return null;
+            });
+
+            // 3. Download/Stream and extract text from S3 directly without temp files
+            String rawText = executeWithRetry("S3 stream & PDF extraction", () -> {
+                try (InputStream s3Stream = s3Service.getObjectStream(magazine.getFilePath())) {
+                    return pdfProcessingService.extractText(s3Stream);
+                }
+            });
+
+            // 4. Generate structured 30-day content plan JSON via LLM
+            String contentPlanJson = executeWithRetry("LLM content plan generation", () -> 
+                contentGenerationService.generate30DayContentPlan(magazine.getTitle(), rawText)
+            );
+
+            // 5. Store structured JSON output in S3
+            String s3PlanKey = "plans/" + magazine.getTenant().getId() + "/" + magazine.getId() + ".json";
+            executeWithRetry("Upload content plan JSON to S3", () -> {
+                s3Service.uploadFile(s3PlanKey, contentPlanJson.getBytes(StandardCharsets.UTF_8), "application/json");
+                return null;
+            });
+
+            // 6. Parse JSON and populate Postgres database
+            List<Map<String, Object>> planItems = objectMapper.readValue(contentPlanJson, new TypeReference<>() {});
+            if (planItems.isEmpty()) {
+                throw new RuntimeException("Generated content plan is empty.");
+            }
+
+            transactionTemplate.executeWithoutResult(status -> {
+                // Fetch fresh magazine entity in current transaction
+                Magazine currentMagazine = magazineRepository.findById(magazineId)
+                        .orElseThrow(() -> new IllegalStateException("Magazine not found in transaction: " + magazineId));
+
+                // Save raw text and plan JSON
+                currentMagazine.setExtractedText(rawText);
+                currentMagazine.setContentPlanJson(contentPlanJson);
+
+                // Clean existing calendar/stories if any (for idempotency/re-run scenarios)
+                List<ContentCalendar> existingCalendar = contentCalendarRepository.findByMagazine_IdOrderByDayNumberAsc(magazineId);
+                if (!existingCalendar.isEmpty()) {
+                    generatedContentRepository.deleteByCalendarEntry_Magazine_Id(magazineId);
+                    contentCalendarRepository.deleteAll(existingCalendar);
+                }
+                storyRepository.deleteByMagazine_Id(magazineId);
+
+                LocalDate startDate = LocalDate.now().plusDays(1);
+
+                for (Map<String, Object> item : planItems) {
+                    Integer dayNumber = ((Number) item.get("dayNumber")).intValue();
+                    String storyTitle = (String) item.get("storyTitle");
+                    String summary = (String) item.get("summary");
+                    List<String> keywords = (List<String>) item.get("keywords");
+                    String contentAngle = (String) item.get("contentAngle");
+                    String postText = (String) item.get("postText");
+
+                    // Create Story
+                    Story story = new Story(currentMagazine.getTenant(), currentMagazine, storyTitle);
+                    story.setSummary(summary);
+                    story.setKeywords(keywords);
+                    story.setContentAngle(contentAngle);
+                    story = storyRepository.save(story);
+
+                    // Create ContentCalendar entry
+                    LocalDate scheduledDate = startDate.plusDays(dayNumber - 1);
+                    ContentCalendar calendarEntry = new ContentCalendar(
+                            currentMagazine.getTenant(),
+                            currentMagazine,
+                            story,
+                            dayNumber,
+                            scheduledDate
+                    );
+                    calendarEntry.setContentAngle(contentAngle);
+                    calendarEntry.setStatus(ContentCalendarStatus.GENERATED);
+                    calendarEntry = contentCalendarRepository.save(calendarEntry);
+
+                    // Create GeneratedContent
+                    GeneratedContent generatedContent = new GeneratedContent(
+                            currentMagazine.getTenant(),
+                            calendarEntry,
+                            postText,
+                            ContentPlatform.WHATSAPP
+                    );
+                    generatedContent.setHashtags(keywords);
+                    generatedContentRepository.save(generatedContent);
+                }
+
+                currentMagazine.setProcessingStatus(MagazineStatus.PROCESSED);
+                currentMagazine.setErrorMessage(null);
+                magazineRepository.save(currentMagazine);
+
+                // Audit log: PDF extraction success
+                AuditLog log = new AuditLog(currentMagazine.getTenant(), null, AuditActionType.PDF_EXTRACTION_SUCCESS, java.time.Instant.now());
+                log.setEntityType("Magazine");
+                log.setEntityId(magazineId);
+                log.setDetails(java.util.Map.of(
+                    "magazineTitle", currentMagazine.getTitle(),
+                    "message", "PDF processed and 30-day calendar generated successfully."
+                ));
+                auditLogRepository.save(log);
+            });
+
+            LOGGER.info("Successfully completed PDF processing pipeline for magazine: {}", magazineId);
 
         } catch (Exception e) {
-            LOGGER.error("Failed to extract stories for magazine {}", magazineId, e);
-            magazine.setProcessingStatus(MagazineStatus.FAILED);
-            magazine.setErrorMessage(e.getMessage());
-            magazineRepository.save(magazine);
+            LOGGER.error("PDF processing pipeline failed for magazine: {}", magazineId, e);
+            
+            // Mark task as FAILED and log error message
+            transactionTemplate.executeWithoutResult(status -> {
+                Magazine currentMagazine = magazineRepository.findById(magazineId).orElse(null);
+                if (currentMagazine != null) {
+                    currentMagazine.setProcessingStatus(MagazineStatus.FAILED);
+                    currentMagazine.setErrorMessage(e.getMessage());
+                    magazineRepository.save(currentMagazine);
+
+                    // Audit log: PDF extraction failed
+                    AuditLog log = new AuditLog(currentMagazine.getTenant(), null, AuditActionType.PDF_EXTRACTION_FAILED, java.time.Instant.now());
+                    log.setEntityType("Magazine");
+                    log.setEntityId(magazineId);
+                    log.setDetails(java.util.Map.of(
+                        "magazineTitle", currentMagazine.getTitle(),
+                        "error", e.getMessage() != null ? e.getMessage() : "Unknown error during extraction"
+                    ));
+                    auditLogRepository.save(log);
+                }
+            });
         }
     }
 
-    private String extractTextFromPdf(String filePath) throws Exception {
-        File pdfFile = null;
-        boolean isTempFile = false;
-        try {
-            if (filePath.startsWith("http")) {
-                File tempFile = File.createTempFile("extract-", ".pdf");
-                pdfFile = tempFile;
-                isTempFile = true;
-                storageService.downloadFile(filePath, tempFile.toPath());
-            } else {
-                pdfFile = new File(filePath);
-            }
+    private <T> T executeWithRetry(String operationName, RetryableCallable<T> callable) throws Exception {
+        int maxAttempts = 3;
+        int attempt = 1;
+        long delayMs = 1500;
 
-            try (PDDocument document = org.apache.pdfbox.Loader.loadPDF(pdfFile)) {
-                PDFTextStripper stripper = new PDFTextStripper();
-                return stripper.getText(document);
-            }
-        } finally {
-            if (isTempFile && pdfFile != null && pdfFile.exists()) {
-                pdfFile.delete();
+        while (true) {
+            try {
+                LOGGER.info("Executing: '{}' - Attempt {}/{}", operationName, attempt, maxAttempts);
+                return callable.call();
+            } catch (Exception e) {
+                LOGGER.warn("Attempt {}/{} failed for '{}': {}", attempt, maxAttempts, operationName, e.getMessage());
+                if (attempt >= maxAttempts) {
+                    LOGGER.error("All {} attempts failed for '{}'", maxAttempts, operationName);
+                    throw e;
+                }
+                attempt++;
+                Thread.sleep(delayMs);
+                delayMs *= 2; // exponential backoff
             }
         }
+    }
+
+    @FunctionalInterface
+    private interface RetryableCallable<T> {
+        T call() throws Exception;
     }
 }

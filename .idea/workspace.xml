@@ -6,10 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="c2acbf2a-3366-4c4b-9ead-4ee8dc62c92e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MediaGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MediaGenerationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/Magazine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/Magazine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MagazineRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MagazineRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContentGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContentGenerationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MagazineService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MagazineService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StorageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StorageService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/GlobalExceptionHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/GlobalExceptionHandler.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -2,6 +2,7 @@
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/config/WebConfig.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/controller/AdHocCampaignController.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/controller/AudienceController.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/controller/AuditLogController.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/controller/BroadcastController.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/controller/CampaignController.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/controller/ContactController.java
@@ -82,6 +83,7 @@
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/audience/AudienceSnapshotDto.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/audience/SegmentCreateRequest.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/audience/SegmentDto.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/audit/AuditLogDto.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/broadcast/BroadcastCreateRequest.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/broadcast/BroadcastDto.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/dto/campaign/AdHocCampaignDto.java
@@ -112,6 +114,7 @@
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/exception/ErrorResponse.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/exception/ExternalProviderException.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/exception/GlobalExceptionHandler.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/exception/PdfProcessingException.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/exception/ResourceNotFoundException.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/quartz/AdHocBroadcastJob.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/quartz/BroadcastSchedulerJob.java
@@ -168,7 +171,9 @@
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/ContentGenerationService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/MagazineService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/MediaGenerationService.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/PdfProcessingService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/PhoneHashingService.java
+/Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/S3Service.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/StorageService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/StoryExtractionService.java
 /Users/pranav/Documents/Marketing Agent/src/main/java/com/marketingagent/service/TemplateService.java

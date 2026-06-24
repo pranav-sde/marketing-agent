@@ -90,6 +90,21 @@ public class MagazineService {
         Tenant tenant = tenantService.getTenantEntity(tenantId);
 
         try {
+            byte[] fileBytes = file.getBytes();
+            String fileHash = calculateSha256(fileBytes);
+
+            // Idempotency check: if already processed or processing, return existing record
+            java.util.Optional<Magazine> existingMagazine = magazineRepository.findByTenant_IdAndFileHash(tenantId, fileHash);
+            if (existingMagazine.isPresent()) {
+                Magazine existing = existingMagazine.get();
+                if (existing.getProcessingStatus() == MagazineStatus.PROCESSED || 
+                    existing.getProcessingStatus() == MagazineStatus.EXTRACTING) {
+                    LOGGER.info("Magazine upload is idempotent. Reusing existing magazine ID: {}, status: {}", 
+                            existing.getId(), existing.getProcessingStatus());
+                    return MagazineDto.from(existing);
+                }
+            }
+
             // Create tenant specific directory
             Path tenantDir = Paths.get(uploadDir, "magazines", tenantId.toString());
             Files.createDirectories(tenantDir);
@@ -97,22 +112,23 @@ public class MagazineService {
             // Generate unique filename
             String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
             Path targetLocation = tenantDir.resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation);
+            Files.write(targetLocation, fileBytes);
 
             // Upload to S3
             String s3Key = "magazines/" + tenantId.toString() + "/" + fileName;
             String fileUrl = targetLocation.toAbsolutePath().toString(); // Fallback to local
             try {
-                fileUrl = storageService.uploadFile(s3Key, Files.readAllBytes(targetLocation), file.getContentType());
+                fileUrl = storageService.uploadFile(s3Key, fileBytes, file.getContentType());
                 LOGGER.info("Magazine PDF uploaded to S3 at key: {}", s3Key);
             } catch (Exception e) {
                 LOGGER.error("Failed to upload magazine PDF to S3: {}", s3Key, e);
             }
 
-            // Create Magazine record with the S3 URL (or local if S3 failed)
+            // Create Magazine record with the S3 URL (or local if S3 failed) and hash
             Magazine magazine = new Magazine(tenant, file.getOriginalFilename(), fileUrl);
             magazine.setFileSize(file.getSize());
             magazine.setMimeType(file.getContentType());
+            magazine.setFileHash(fileHash);
             magazine = magazineRepository.save(magazine);
 
             LOGGER.info("Magazine {} uploaded successfully for tenant {}", magazine.getId(), tenantId);
@@ -135,6 +151,22 @@ public class MagazineService {
         } catch (IOException e) {
             LOGGER.error("Failed to store uploaded magazine file", e);
             throw new RuntimeException("Could not store file " + file.getOriginalFilename() + ". Please try again!", e);
+        }
+    }
+
+    private String calculateSha256(byte[] bytes) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(bytes);
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to calculate SHA-256 hash", e);
         }
     }
 
