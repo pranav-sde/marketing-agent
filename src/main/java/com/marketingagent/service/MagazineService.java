@@ -81,16 +81,8 @@ public class MagazineService {
         // Trigger async extraction using the stored file path
         final UUID finalMagazineId = magazineId;
         final String filePath = magazine.getFilePath();
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new org.springframework.transaction.support.TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    storyExtractionService.extractStoriesAsyncFromFile(finalMagazineId, filePath);
-                }
-            });
-        } else {
-            storyExtractionService.extractStoriesAsyncFromFile(finalMagazineId, filePath);
-        }
+        // Trigger async extraction using the stored file path
+        storyExtractionService.extractStoriesAsyncFromFile(magazineId, filePath);
         
         return MagazineDto.from(magazine);
     }
@@ -197,18 +189,8 @@ public class MagazineService {
 
             LOGGER.info("Magazine {} uploaded successfully for tenant {}", magazine.getId(), tenantId);
 
-            // Trigger async story extraction after transaction commits
-            final UUID finalMagazineId = magazine.getId();
-            if (TransactionSynchronizationManager.isActualTransactionActive()) {
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        storyExtractionService.extractStoriesAsync(finalMagazineId);
-                    }
-                });
-            } else {
-                storyExtractionService.extractStoriesAsync(finalMagazineId);
-            }
+            // Trigger async story extraction
+            storyExtractionService.extractStoriesAsync(magazine.getId());
 
             return MagazineDto.from(magazine);
 
