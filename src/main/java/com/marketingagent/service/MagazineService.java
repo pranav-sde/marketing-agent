@@ -78,11 +78,19 @@ public class MagazineService {
         
         LOGGER.info("Triggering reprocess for magazine: {} (was: {})", magazineId, status);
         
-        // Trigger async extraction using the stored file path
+        // Trigger async extraction using the stored file path after transaction commits
         final UUID finalMagazineId = magazineId;
         final String filePath = magazine.getFilePath();
-        // Trigger async extraction using the stored file path
-        storyExtractionService.extractStoriesAsyncFromFile(magazineId, filePath);
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    storyExtractionService.extractStoriesAsyncFromFile(finalMagazineId, filePath);
+                }
+            });
+        } else {
+            storyExtractionService.extractStoriesAsyncFromFile(finalMagazineId, filePath);
+        }
         
         return MagazineDto.from(magazine);
     }
@@ -189,8 +197,18 @@ public class MagazineService {
 
             LOGGER.info("Magazine {} uploaded successfully for tenant {}", magazine.getId(), tenantId);
 
-            // Trigger async story extraction
-            storyExtractionService.extractStoriesAsync(magazine.getId());
+            // Trigger async story extraction after transaction commits
+            final UUID finalMagazineId = magazine.getId();
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        storyExtractionService.extractStoriesAsync(finalMagazineId);
+                    }
+                });
+            } else {
+                storyExtractionService.extractStoriesAsync(finalMagazineId);
+            }
 
             return MagazineDto.from(magazine);
 
