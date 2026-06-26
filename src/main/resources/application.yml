@@ -20,10 +20,9 @@ spring:
       keepalive-time: 60000
       connection-test-query: SELECT 1
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
     baseline-on-migrate: true
-    out-of-order: true
   quartz:
     job-store-type: memory
     properties:
