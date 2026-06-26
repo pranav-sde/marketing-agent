@@ -23,6 +23,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    out-of-order: true
+    clean-on-validation-error: true
   quartz:
     job-store-type: memory
     properties:
