@@ -31,17 +31,25 @@ public class PDFProcessingService {
     private StorageService storageService;
 
     public String extractText(Path pdfPath) {
-        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBufferedFile(new File(pdfPath.toUri())))) {
+        File file = pdfPath.toFile();
+        if (!file.exists()) {
+            throw new RuntimeException("PDF file physically does not exist on disk (it may have been wiped by a Render restart): " + file.getAbsolutePath());
+        }
+        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBufferedFile(file))) {
             PDFTextStripper stripper = new PDFTextStripper();
             return stripper.getText(document);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to extract text from PDF: " + pdfPath.getFileName(), e);
+            throw new RuntimeException("Failed to extract text from PDF: " + pdfPath.getFileName() + " - Reason: " + e.getMessage(), e);
         }
     }
 
     public List<String> extractImages(Path pdfPath) {
         List<String> imageFilenames = new ArrayList<>();
-        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBufferedFile(new File(pdfPath.toUri())))) {
+        File file = pdfPath.toFile();
+        if (!file.exists()) {
+            throw new RuntimeException("PDF file physically does not exist on disk: " + file.getAbsolutePath());
+        }
+        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBufferedFile(file))) {
             PDFRenderer renderer = new PDFRenderer(document);
 
             // 1. Render Cover Page (Page 0)
@@ -109,7 +117,11 @@ public class PDFProcessingService {
     }
 
     public String renderPageAsImage(Path pdfPath, int pageIndex) {
-        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBufferedFile(new File(pdfPath.toUri())))) {
+        File file = pdfPath.toFile();
+        if (!file.exists()) {
+            throw new RuntimeException("PDF file physically does not exist on disk: " + file.getAbsolutePath());
+        }
+        try (PDDocument document = Loader.loadPDF(new RandomAccessReadBufferedFile(file))) {
             PDFRenderer renderer = new PDFRenderer(document);
             int totalPages = document.getNumberOfPages();
             if (totalPages == 0) {
