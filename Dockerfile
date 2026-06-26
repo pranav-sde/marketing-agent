@@ -12,6 +12,10 @@ RUN mvn clean package -DskipTests
 # Stage 2: Minimal runtime image
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
+
+# Install fontconfig and fonts required for PDFBox java.awt image processing
+RUN apk add --no-cache fontconfig ttf-dejavu
+
 COPY --from=build /app/target/marketing-agent-*.jar app.jar
 
 ENV PORT=8080
