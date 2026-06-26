@@ -1,6 +1,7 @@
 package com.marketingagent.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -25,7 +26,22 @@ public class Tenant {
 
     private String whatsappPhoneNumberId;
 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     public Tenant() {}
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public Tenant(String name, String slug, String timezone, String defaultLocale) {
         this.name = name;
@@ -88,5 +104,21 @@ public class Tenant {
 
     public void setWhatsappPhoneNumberId(String whatsappPhoneNumberId) {
         this.whatsappPhoneNumberId = whatsappPhoneNumberId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

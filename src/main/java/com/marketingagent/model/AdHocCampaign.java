@@ -34,7 +34,22 @@ public class AdHocCampaign {
 
     private LocalDateTime sentAt;
 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     public AdHocCampaign() {}
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public AdHocCampaign(Tenant tenant, String messageText, String mediaUrl, String platform, String status, Instant scheduledTime) {
         this.tenant = tenant;
@@ -107,5 +122,21 @@ public class AdHocCampaign {
 
     public void setSentAt(LocalDateTime sentAt) {
         this.sentAt = sentAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

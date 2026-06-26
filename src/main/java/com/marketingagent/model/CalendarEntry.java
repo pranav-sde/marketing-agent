@@ -40,7 +40,22 @@ public class CalendarEntry {
 
     private LocalDateTime sentAt;
 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     public CalendarEntry() {}
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public CalendarEntry(Tenant tenant, Magazine magazine, int dayNumber, LocalDate scheduledDate, String status, String contentAngle, String messageText, String mediaUrl) {
         this.tenant = tenant;
@@ -131,5 +146,21 @@ public class CalendarEntry {
 
     public void setSentAt(LocalDateTime sentAt) {
         this.sentAt = sentAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
