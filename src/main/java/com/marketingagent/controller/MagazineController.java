@@ -1,22 +1,20 @@
 package com.marketingagent.controller;
 
-import com.marketingagent.dto.magazine.ContentCalendarDto;
-import com.marketingagent.dto.magazine.MagazineDto;
-import com.marketingagent.dto.magazine.StoryDto;
-import com.marketingagent.repository.StoryRepository;
-import com.marketingagent.service.ContentCalendarService;
-import com.marketingagent.service.MagazineService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import com.marketingagent.model.Magazine;
+import com.marketingagent.model.Tenant;
+import com.marketingagent.repository.MagazineRepository;
+import com.marketingagent.repository.TenantRepository;
+import com.marketingagent.service.PDFProcessingService;
+import com.marketingagent.service.StorageService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.marketingagent.model.CalendarEntry;
+import com.marketingagent.repository.CalendarEntryRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,84 +23,102 @@ import java.util.stream.Collectors;
 @RequestMapping("/v1/tenants/{tenantId}/magazines")
 public class MagazineController {
 
-    private final MagazineService magazineService;
-    private final ContentCalendarService contentCalendarService;
-    private final StoryRepository storyRepository;
+    @Autowired
+    private TenantRepository tenantRepository;
 
-    public MagazineController(
-            MagazineService magazineService,
-            ContentCalendarService contentCalendarService,
-            StoryRepository storyRepository) {
-        this.magazineService = magazineService;
-        this.contentCalendarService = contentCalendarService;
-        this.storyRepository = storyRepository;
+    @Autowired
+    private MagazineRepository magazineRepository;
+
+    @Autowired
+    private CalendarEntryRepository calendarEntryRepository;
+
+    @Autowired
+    private StorageService storageService;
+
+    @Autowired
+    private PDFProcessingService pdfProcessingService;
+
+    public record MagazineResponse(UUID id, String title, String fileName, LocalDateTime createdAt) {}
+
+    @GetMapping
+    public ResponseEntity<List<MagazineResponse>> getMagazines(@PathVariable UUID tenantId) {
+        List<Magazine> magazines = magazineRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+        List<MagazineResponse> response = magazines.stream()
+                .map(m -> new MagazineResponse(m.getId(), m.getTitle(), m.getFileName(), m.getCreatedAt()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<MagazineDto> uploadMagazine(
+    @PostMapping
+    public ResponseEntity<?> uploadMagazine(
             @PathVariable UUID tenantId,
             @RequestParam("file") MultipartFile file) {
         
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+        if (tenant == null) {
+            return ResponseEntity.notFound().build();
         }
+
+        try {
+            // 1. Store the original PDF
+            String fileName = storageService.storeFile(file);
+            java.nio.file.Path pdfPath = storageService.load(fileName);
+
+            // 2. Create the Magazine Entity
+            Magazine magazine = new Magazine();
+            magazine.setTenant(tenant);
+            String title = file.getOriginalFilename();
+            if (title != null && title.contains(".")) {
+                title = title.substring(0, title.lastIndexOf("."));
+            }
+            magazine.setTitle(title);
+            magazine.setFileName(file.getOriginalFilename());
+            magazine.setStoragePath(fileName);
+            
+            Magazine saved = magazineRepository.save(magazine);
+
+            // We do PDF processing synchronously here so the UI can immediately load the assets.
+            // (The files are stored inside our upload folder, which makes them available for calendar generation).
+            System.out.println("Processing magazine: " + saved.getTitle());
+            
+            // To ensure the files are generated, we can pre-extract them.
+            // The list of images will be used by the Calendar Generation endpoint later.
+            // For now we just return the saved magazine info.
+            return ResponseEntity.ok(new MagazineResponse(saved.getId(), saved.getTitle(), saved.getFileName(), saved.getCreatedAt()));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Failed to process magazine upload: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{magazineId}")
+    @Transactional
+    public ResponseEntity<?> deleteMagazine(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID magazineId) {
         
-        MagazineDto dto = magazineService.uploadMagazine(tenantId, file);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(dto);
-    }
+        return magazineRepository.findById(magazineId)
+                .map(magazine -> {
+                    // 1. Delete associated calendar entries and their files from storage
+                    List<CalendarEntry> entries = calendarEntryRepository.findByTenantIdAndMagazineIdOrderByDayNumberAsc(tenantId, magazineId);
+                    for (CalendarEntry entry : entries) {
+                        if (entry.getMediaUrl() != null) {
+                            storageService.deleteFile(entry.getMediaUrl());
+                        }
+                    }
+                    calendarEntryRepository.deleteAll(entries);
 
-    @GetMapping
-    public ResponseEntity<List<MagazineDto>> listMagazines(@PathVariable UUID tenantId) {
-        return ResponseEntity.ok(magazineService.listMagazines(tenantId));
-    }
+                    // 2. Delete original PDF file
+                    if (magazine.getStoragePath() != null) {
+                        storageService.deleteFile(magazine.getStoragePath());
+                    }
 
-    @GetMapping("/{magazineId}")
-    public ResponseEntity<MagazineDto> getMagazine(
-            @PathVariable UUID tenantId,
-            @PathVariable UUID magazineId) {
-        return ResponseEntity.ok(magazineService.getMagazine(tenantId, magazineId));
-    }
+                    // 3. Delete magazine record
+                    magazineRepository.delete(magazine);
 
-    @GetMapping("/{magazineId}/stories")
-    public ResponseEntity<List<StoryDto>> getExtractedStories(
-            @PathVariable UUID tenantId,
-            @PathVariable UUID magazineId) {
-        // validate ownership
-        magazineService.getMagazineEntity(tenantId, magazineId);
-        List<StoryDto> stories = storyRepository.findByMagazine_Id(magazineId)
-                .stream()
-                .map(StoryDto::from)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(stories);
-    }
-
-    @PostMapping("/{magazineId}/generate-calendar")
-    public ResponseEntity<List<ContentCalendarDto>> generateCalendar(
-            @PathVariable UUID tenantId,
-            @PathVariable UUID magazineId) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(contentCalendarService.generateCalendar(tenantId, magazineId));
-    }
-
-    @GetMapping("/{magazineId}/calendar")
-    public ResponseEntity<List<ContentCalendarDto>> getCalendar(
-            @PathVariable UUID tenantId,
-            @PathVariable UUID magazineId) {
-        return ResponseEntity.ok(contentCalendarService.getCalendar(tenantId, magazineId));
-    }
-
-    @PostMapping("/{magazineId}/reprocess")
-    public ResponseEntity<MagazineDto> reprocessMagazine(
-            @PathVariable UUID tenantId,
-            @PathVariable UUID magazineId) {
-        return ResponseEntity.ok(magazineService.reprocessMagazine(tenantId, magazineId));
-    }
-
-    @org.springframework.web.bind.annotation.DeleteMapping("/{magazineId}")
-    public ResponseEntity<Void> deleteMagazine(
-            @PathVariable UUID tenantId,
-            @PathVariable UUID magazineId) {
-        magazineService.deleteMagazine(tenantId, magazineId);
-        return ResponseEntity.noContent().build();
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -5,28 +5,341 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c2acbf2a-3366-4c4b-9ead-4ee8dc62c92e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ARCHITECTURE_REVIEW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/marketing-agent.mv.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/marketing-agent.trace.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/MarketingAgentApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/MarketingAgentApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/config/WebConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/AdHocCampaignController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/AdHocCampaignController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/ContactController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/ContactController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/MagazineDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/MagazineDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/AdHocBroadcastJob.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/AdHocBroadcastJob.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/DailyContentBroadcastJob.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/DailyContentBroadcastJob.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AdHocCampaignService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AdHocCampaignService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContactService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContactService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/MarketingAgentApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/MarketingAgentApplication.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ContactService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ContactService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/AudienceController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/AuditLogController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/BroadcastController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/CampaignController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/ContactController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/ContentCalendarActionController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/MagazineController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/MagazineController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/TemplateController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/TenantController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/TenantController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/TenantSettingsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/TestController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/controller/WebhookController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/agent/AgentOutput.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/agent/AgentPolicyCheck.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/agent/AgentTask.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/agent/AgentTaskStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/agent/AgentTaskType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audience/AudienceSnapshot.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audience/AudienceSnapshotMember.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audience/Segment.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audience/SegmentType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audit/AuditActionType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audit/AuditLog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audit/DataExport.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/audit/DataExportStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/broadcast/Broadcast.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/broadcast/BroadcastBatch.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/broadcast/BroadcastBatchStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/broadcast/BroadcastStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/AdHocCampaign.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/AdHocCampaignStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/ApprovalStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/Campaign.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/CampaignApproval.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/CampaignAsset.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/CampaignAssetType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/campaign/CampaignStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/common/BaseEntity.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/common/Channel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/common/ProviderType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/ConsentEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/ConsentEventType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/Contact.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/ContactAttribute.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/ContactChannelState.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/ContactStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/SuppressionListEntry.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/contact/SuppressionReason.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/integration/WhatsAppAccount.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/integration/WhatsAppAccountStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/ContentCalendar.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/ContentCalendarStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/ContentPlatform.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/GeneratedContent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/Magazine.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/MagazineStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/magazine/Story.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/ContentOutboundMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/DeliveryEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/DeliveryEventType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/InboundMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/InboundMessageClassification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/MessageAttempt.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/MessageAttemptStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/OutboundMessage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/OutboundMessageStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/message/ProviderWebhookEvent.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/template/MessageTemplate.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/template/TemplateCategory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/template/TemplateStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/template/TemplateVersion.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/tenant/Tenant.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/tenant/TenantStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/user/Membership.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/user/MembershipRole.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/user/UserAccount.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/domain/user/UserStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/agent/AgentTaskCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/agent/AgentTaskDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/audience/AudienceSnapshotDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/audience/SegmentCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/audience/SegmentDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/audit/AuditLogDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/broadcast/BroadcastCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/broadcast/BroadcastDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/AdHocCampaignDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CampaignCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CampaignDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CampaignReviewRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/campaign/CreateAdHocCampaignRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/contact/BulkContactImportRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/contact/BulkContactImportResultDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/contact/ConsentEventDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/contact/ConsentRecordRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/contact/ContactCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/contact/ContactDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/ContentCalendarDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/GeneratedContentDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/MagazineDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/magazine/StoryDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/message/ContentAnalyticsDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/message/OutboundMessageDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/message/WebhookIngestRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/template/MessageTemplateDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/template/TemplateCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/tenant/TenantCreateRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/tenant/TenantDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/dto/tenant/TenantSettingsDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/ApplicationException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/BadRequestException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/ConflictException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/ErrorCode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/ErrorResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/ExternalProviderException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/GlobalExceptionHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/PdfProcessingException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/exception/ResourceNotFoundException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/AdHocBroadcastJob.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/BroadcastSchedulerJob.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/DailyContentBroadcastJob.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/MarketingAgentQuartzProperties.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/QuartzConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/quartz/WebhookReconciliationJob.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AdHocCampaignRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AdHocCampaignRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AgentOutputRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AgentPolicyCheckRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AgentTaskRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AudienceSnapshotMemberRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AudienceSnapshotRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/AuditLogRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/BroadcastBatchRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/BroadcastRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/CampaignApprovalRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/CampaignAssetRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/CampaignRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ConsentEventRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactAttributeRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactChannelStateRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContactRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContentCalendarRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ContentOutboundMessageRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/DataExportRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/DeliveryEventRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/GeneratedContentRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/InboundMessageRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MagazineRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MagazineRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MembershipRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MessageAttemptRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/MessageTemplateRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/OutboundMessageRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/ProviderWebhookEventRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/SegmentRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/StoryRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/SuppressionListEntryRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/TemplateVersionRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/TenantRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/TenantRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/UserAccountRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/repository/WhatsAppAccountRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/security/ApiKeyAuthenticationFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/security/ApiKeyProperties.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/security/SecurityConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AdHocCampaignService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AgentTaskService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/AudienceService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/BroadcastService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/CampaignService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ConsentService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContactService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContentCalendarService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/ContentGenerationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MagazineService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/MediaGenerationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/PdfProcessingService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/PhoneHashingService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/S3Service.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StorageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StorageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/StoryExtractionService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/TemplateService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/TenantService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/service/WebhookEventService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/util/ResetStuckMagazines.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/WebClientConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/WhatsAppClientProperties.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/groq/GroqClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/groq/GroqClientProperties.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppMessageResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/marketingagent/webclient/whatsapp/WhatsAppTemplateMessageRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/marketingagent/service/PdfProcessingServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/marketingagent/service/PdfProcessingServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/MarketingAgentApplication.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/agent/AgentOutput.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/agent/AgentPolicyCheck.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/agent/AgentTask.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/agent/AgentTaskStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/agent/AgentTaskType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audience/AudienceSnapshot.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audience/AudienceSnapshotMember.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audience/Segment.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audience/SegmentType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audit/AuditActionType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audit/AuditLog.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audit/DataExport.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/audit/DataExportStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/broadcast/Broadcast.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/broadcast/BroadcastBatch.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/broadcast/BroadcastBatchStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/broadcast/BroadcastStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/campaign/ApprovalStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/campaign/Campaign.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/campaign/CampaignApproval.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/campaign/CampaignAsset.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/campaign/CampaignAssetType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/campaign/CampaignStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/common/BaseEntity.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/common/Channel.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/common/ProviderType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/ConsentEvent.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/ConsentEventType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/Contact.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/ContactAttribute.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/ContactChannelState.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/ContactStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/SuppressionListEntry.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/contact/SuppressionReason.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/integration/WhatsAppAccount.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/integration/WhatsAppAccountStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/DeliveryEvent.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/DeliveryEventType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/InboundMessage.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/InboundMessageClassification.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/MessageAttempt.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/MessageAttemptStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/OutboundMessage.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/OutboundMessageStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/message/ProviderWebhookEvent.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/template/MessageTemplate.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/template/TemplateCategory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/template/TemplateStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/template/TemplateVersion.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/tenant/Tenant.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/tenant/TenantStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/user/Membership.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/user/MembershipRole.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/user/UserAccount.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/domain/user/UserStatus.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/agent/AgentTaskCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/agent/AgentTaskDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/audience/AudienceSnapshotDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/audience/SegmentCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/audience/SegmentDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/broadcast/BroadcastCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/broadcast/BroadcastDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/campaign/CampaignCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/campaign/CampaignDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/campaign/CampaignReviewRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/contact/ConsentEventDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/contact/ConsentRecordRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/contact/ContactCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/contact/ContactDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/message/OutboundMessageDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/message/WebhookIngestRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/template/MessageTemplateDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/template/TemplateCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/tenant/TenantCreateRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/dto/tenant/TenantDto.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/ApplicationException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/BadRequestException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/ConflictException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/ErrorCode.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/ErrorResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/ExternalProviderException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/GlobalExceptionHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/exception/ResourceNotFoundException.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/quartz/BroadcastSchedulerJob.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/quartz/MarketingAgentQuartzProperties.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/quartz/QuartzConfig.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/quartz/WebhookReconciliationJob.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/AgentOutputRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/AgentPolicyCheckRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/AgentTaskRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/AudienceSnapshotMemberRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/AudienceSnapshotRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/AuditLogRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/BroadcastBatchRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/BroadcastRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/CampaignApprovalRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/CampaignAssetRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/CampaignRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ConsentEventRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactAttributeRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactChannelStateRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ContactRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/DataExportRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/DeliveryEventRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/InboundMessageRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/MembershipRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/MessageAttemptRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/MessageTemplateRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/OutboundMessageRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/ProviderWebhookEventRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/SegmentRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/SuppressionListEntryRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/TemplateVersionRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/TenantRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/UserAccountRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/repository/WhatsAppAccountRepository.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/AgentTaskService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/AudienceService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/BroadcastService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/CampaignService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ConsentService$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ConsentService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/ContactService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/PhoneHashingService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/TemplateService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/TenantService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/service/WebhookEventService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/WebClientConfig.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/WhatsAppClientProperties.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppMessageClient.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppMessageResponse.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/marketingagent/webclient/whatsapp/WhatsAppTemplateMessageRequest.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
