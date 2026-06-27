@@ -70,8 +70,9 @@ public class StorageService {
                 }
                 this.useS3 = true;
                 System.out.println("[StorageService] S3 enabled → bucket: " + s3Bucket + ", region: " + s3Region);
-            } catch (Exception e) {
-                System.err.println("[StorageService] Failed to init S3, falling back to local: " + e.getMessage());
+            } catch (Throwable t) {
+                System.err.println("[StorageService] Failed to init S3, falling back to local: " + t.getMessage());
+                t.printStackTrace();
                 this.useS3 = false;
             }
         } else {
