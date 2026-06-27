@@ -49,7 +49,7 @@ public class BroadcastScheduler {
                         tenant.getWhatsappPhoneNumberId(),
                         entry.getMessageText(),
                         mediaUrl,
-                        "+1234567890" // Default/mock recipient
+                        "+919307712930" // Default/mock recipient
                 );
 
                 entry.setStatus(sent ? "SENT" : "FAILED");
@@ -73,7 +73,7 @@ public class BroadcastScheduler {
                         tenant.getWhatsappPhoneNumberId(),
                         campaign.getMessageText(),
                         mediaUrl,
-                        "+1234567890"
+                        "+919307712930"
                 );
 
                 campaign.setStatus(sent ? "SENT" : "FAILED");

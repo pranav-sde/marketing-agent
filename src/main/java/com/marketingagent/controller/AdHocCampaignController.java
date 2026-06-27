@@ -122,7 +122,7 @@ public class AdHocCampaignController {
                         tenant.getWhatsappPhoneNumberId(),
                         campaign.getMessageText(),
                         storageService.getFileUrl(campaign.getMediaUrl()),
-                        "+1234567890" // Default test recipient
+                        "+919307712930" // Default test recipient
                 );
                 campaign.setStatus(sent ? "SENT" : "FAILED");
                 campaign.setSentAt(LocalDateTime.now());
