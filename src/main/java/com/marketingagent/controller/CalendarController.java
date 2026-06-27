@@ -9,6 +9,7 @@ import com.marketingagent.repository.TenantRepository;
 import com.marketingagent.service.LLMService;
 import com.marketingagent.service.PDFProcessingService;
 import com.marketingagent.service.StorageService;
+import com.marketingagent.service.WhatsAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -156,6 +158,9 @@ public class CalendarController {
         }
     }
 
+    @Autowired
+    private WhatsAppService whatsAppService;
+
     @PostMapping("/calendar/{entryId}/approve")
     public ResponseEntity<?> approveEntry(@PathVariable UUID entryId) {
         return calendarEntryRepository.findById(entryId)
@@ -165,6 +170,46 @@ public class CalendarController {
                     return ResponseEntity.ok(mapToDTO(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/calendar/{entryId}/send")
+    public ResponseEntity<?> sendEntryImmediately(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID entryId,
+            @RequestParam(required = false) String recipientPhone) {
+
+        Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+        CalendarEntry entry = calendarEntryRepository.findById(entryId).orElse(null);
+
+        if (tenant == null || entry == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Use the passed recipient phone, or fall back to the default/mock number
+        String targetPhone = (recipientPhone != null && !recipientPhone.trim().isEmpty()) 
+                ? recipientPhone.trim() 
+                : "+919307712930";
+
+        String mediaUrl = storageService.getFileUrl(entry.getMediaUrl());
+        
+        System.out.println("Triggering immediate WhatsApp send to: " + targetPhone);
+        
+        boolean sent = whatsAppService.sendBroadcast(
+                tenant.getWhatsappAccessToken(),
+                tenant.getWhatsappPhoneNumberId(),
+                entry.getMessageText(),
+                mediaUrl,
+                targetPhone
+        );
+
+        if (sent) {
+            entry.setStatus("SENT");
+            entry.setSentAt(LocalDateTime.now());
+            CalendarEntry saved = calendarEntryRepository.save(entry);
+            return ResponseEntity.ok(mapToDTO(saved));
+        } else {
+            return ResponseEntity.internalServerError().body("Failed to send WhatsApp message.");
+        }
     }
 
     @PostMapping("/calendar/{entryId}/on-hold")
